@@ -7,21 +7,24 @@
 
 ## ⚡ Next Step（下次回到项目先看这里）
 
-**当前状态**：✅ **Phase 0 全部完成** — 项目骨架 + Notion 4 库 + LLM 网关 + 搜索 KEY 都就位
+**当前状态**：✅ **Phase 0 + Phase 1 全部完成** — 5 容器架构跑通，CLI 能扫到 Notion 需求，Skill Library 双向同步
 
 **下一步动作**：
-1. ⏳ 进入 Phase 1（能力层骨架 + Skill Library 同步）— **可立即开始**
-2. （可选）Phase 2 之前若想增强竞品发现质量，补 `PERPLEXITY_API_KEY`，否则用 Tavily+Kimi 组合即可
+1. ⏳ 进入 Phase 2（调研 Agent）— 用 Tavily search + Kimi-K2-Thinking 实现关键词→竞品发现，再用 Playwright 抓登录站
+2. Notion 需求表已有 1 条示例需求（"示例：竞品调研自动化工具"，待处理）可用作端到端调试输入
+3. （可选）Phase 2 真跑通后再考虑接 Langfuse trace（去 http://localhost:3000 注册建 project，把 PUBLIC/SECRET KEY 写入 `.env`）
 
-**已完成**（2026-05-26）：
-- ✅ 项目骨架 + git init + 目录结构
-- ✅ `docker-compose.yml`（postgres + n8n + qdrant + langfuse 4 容器；service 待 Phase 1 启用）
-- ✅ `.env.example` + `README.md` + `infra/postgres/init.sql`
-- ✅ Notion 4 个数据库（3 个新建 + 1 个复用 workspace 顶层已有的 Skill Library）
-- ✅ `NOTION_API_KEY` + 4 个 DB ID 写入 `.env`
-- ✅ LLM 网关定型：`modelverse.cn`（OpenAI 兼容协议，token 已写入 `.env`）
-- ✅ 模型路由重新设计：Kimi-K2-Thinking（重型推理）+ deepseek-v4-flash（摘要）+ glm-5-turbo（跨家 Critic）
-- ✅ `TAVILY_API_KEY` 验证可用并配置（同时承担竞品发现 + 公开网页摘要的搜索）
+**Phase 1 已完成**（2026-05-26）：
+- ✅ FastAPI 项目结构（pyproject + Dockerfile + 6 子包 + 配置 + 测试）
+- ✅ `LLMRouter` 走 modelverse 网关，按任务路由 6 个模型，Langfuse graceful degradation
+- ✅ `NotionClient` 用 httpx 直接调 v2022-06-28 API（绕开 SDK 版本不兼容）
+- ✅ `SkillSyncer` 解析 frontmatter + body，sha256 hash 缓存，单向 push 到 Notion 10 字段子集
+- ✅ FastAPI 路由：`/health` `/skills/sync` `/skills/search`，lifespan 启动时自动同步
+- ✅ service 容器接入 compose（5 容器全 healthy）
+- ✅ CLI 5 子命令：`info` / `scan-new-requirements` / `skills-sync` / `skills-list`
+- ✅ 2 个示例 skill 已 push 到 Notion（competitor_discovery + prd_writer）
+
+**Phase 0 已完成**（2026-05-26）：见下方 checkbox
 
 ---
 
@@ -34,11 +37,11 @@
   - [x] 在 Notion 建 4 个数据库（3 新建 + 1 复用 Skill Library），Database ID 写入 `.env`
   - [x] 配置 API Key：Notion + modelverse LLM 网关 token + Tavily（Perplexity 可选未启用）
 
-- [ ] **Phase 1 - 能力层骨架 + Skill Library（1 天）**
-  - [ ] FastAPI 项目结构 + Notion client + LLM router（含 Langfuse 中转）
-  - [ ] 现有 Prompt 整理到 `skill-library/*.md`（frontmatter 只声明本项目用的 10 个字段，见 schema B）
-  - [ ] 服务启动时单向同步 `skill-library/` → Notion Skill Library（**只读写 10 字段子集，不动其他列**）
-  - [ ] CLI 入口能跑通"读 Notion 需求 → 打印场景"
+- [x] **Phase 1 - 能力层骨架 + Skill Library（1 天）**
+  - [x] FastAPI 项目结构 + Notion client + LLM router（含 Langfuse graceful degradation）
+  - [x] 现有 Prompt 整理到 `skill-library/*.md`（frontmatter 10 字段子集 + body 用 ## 标题分隔 prompt 正文）
+  - [x] 服务启动时单向同步 `skill-library/` → Notion Skill Library（hash 缓存避免无意义打 API）
+  - [x] CLI 跑通"读 Notion 需求 → 打印场景"（`scan-new-requirements` 子命令）
 
 - [ ] **Phase 2 - 调研 Agent（2 天）**
   - [ ] Perplexity 关键词发现
