@@ -1,0 +1,99 @@
+# PM 需求自动化系统 - 整体编排
+# 一个 docker-compose up 起 5 个容器，迁移单元
+version: "3.9"
+
+services:
+  # ---- 数据库：n8n + langfuse 共用 ----
+  postgres:
+    image: postgres:16-alpine
+    container_name: pm_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # ---- 编排层 ----
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: pm_n8n
+    ports:
+      - "${N8N_PORT}:5678"
+    environment:
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB_N8N}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+      N8N_BASIC_AUTH_ACTIVE: "true"
+      N8N_BASIC_AUTH_USER: ${N8N_BASIC_AUTH_USER}
+      N8N_BASIC_AUTH_PASSWORD: ${N8N_BASIC_AUTH_PASSWORD}
+      N8N_HOST: ${N8N_HOST}
+      WEBHOOK_URL: http://${N8N_HOST}:${N8N_PORT}/
+      GENERIC_TIMEZONE: Asia/Shanghai
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n/workflows:/workflows
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ---- 向量库 ----
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: pm_qdrant
+    ports:
+      - "${QDRANT_PORT}:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: unless-stopped
+
+  # ---- LLM 观测 ----
+  langfuse:
+    image: langfuse/langfuse:2
+    container_name: pm_langfuse
+    ports:
+      - "${LANGFUSE_PORT}:3000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB_LANGFUSE}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${LANGFUSE_NEXTAUTH_SECRET}
+      SALT: ${LANGFUSE_SALT}
+      TELEMETRY_ENABLED: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ---- 能力层：FastAPI 服务 ----
+  # NOTE: Phase 1 写完 service/Dockerfile 后取消注释启用
+  # service:
+  #   build:
+  #     context: ./service
+  #   container_name: pm_service
+  #   ports:
+  #     - "${SERVICE_PORT}:8000"
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - ./service:/app
+  #     - ./skill-library:/app/skill-library
+  #     - ./outputs:/app/outputs
+  #   depends_on:
+  #     - qdrant
+  #     - langfuse
+  #   restart: unless-stopped
+
+volumes:
+  postgres_data:
+  n8n_data:
+  qdrant_data:

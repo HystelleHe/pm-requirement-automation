@@ -1,0 +1,35 @@
+# === 敏感文件 ===
+.env
+.env.local
+*.pem
+*.key
+
+# === Python ===
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# === 编辑器/系统 ===
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# === 自动产出（保留目录结构）===
+outputs/*
+!outputs/.gitkeep
+
+# === 日志 ===
+*.log
+logs/
+
+# === Node（n8n custom node 可能需要）===
+node_modules/
