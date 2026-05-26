@@ -7,12 +7,11 @@
 
 ## ⚡ Next Step（下次回到项目先看这里）
 
-**当前状态**：Phase 0 实施中 — 项目骨架 + Notion 4 库已完成，**等待用户提供其余 5 个 API Key 后 Phase 0 全部结束**
+**当前状态**：✅ **Phase 0 全部完成** — 项目骨架 + Notion 4 库 + LLM 网关 + 搜索 KEY 都就位
 
 **下一步动作**：
-1. ⏳ 用户提供 `PERPLEXITY_API_KEY` + `TAVILY_API_KEY`（搜索服务，Phase 2 才阻塞，可延后）
-2. ⏳ Phase 0 收尾：git commit + 把本章节 checkbox 全部打勾
-3. ⏳ 进入 Phase 1（能力层骨架 + Skill Library 同步）— **不需要等搜索 KEY**
+1. ⏳ 进入 Phase 1（能力层骨架 + Skill Library 同步）— **可立即开始**
+2. （可选）Phase 2 之前若想增强竞品发现质量，补 `PERPLEXITY_API_KEY`，否则用 Tavily+Kimi 组合即可
 
 **已完成**（2026-05-26）：
 - ✅ 项目骨架 + git init + 目录结构
@@ -22,6 +21,7 @@
 - ✅ `NOTION_API_KEY` + 4 个 DB ID 写入 `.env`
 - ✅ LLM 网关定型：`modelverse.cn`（OpenAI 兼容协议，token 已写入 `.env`）
 - ✅ 模型路由重新设计：Kimi-K2-Thinking（重型推理）+ deepseek-v4-flash（摘要）+ glm-5-turbo（跨家 Critic）
+- ✅ `TAVILY_API_KEY` 验证可用并配置（同时承担竞品发现 + 公开网页摘要的搜索）
 
 ---
 
@@ -29,10 +29,10 @@
 
 总工期约 **9-10 天**。建议 Phase 0-6 必做，Phase 7 二期。
 
-- [ ] **Phase 0 - 脚手架（0.5 天）**
-  - [x] 写 `docker-compose.yml`（n8n + service + Qdrant + Langfuse + PostgreSQL）
+- [x] **Phase 0 - 脚手架（0.5 天）**
+  - [x] 写 `docker-compose.yml`（postgres + n8n + qdrant + langfuse；service 容器留 Phase 1 启用）
   - [x] 在 Notion 建 4 个数据库（3 新建 + 1 复用 Skill Library），Database ID 写入 `.env`
-  - [ ] 配置所有 API Key（Claude / OpenAI / Perplexity / DeepSeek / Tavily / Notion — Notion 已完成）
+  - [x] 配置 API Key：Notion + modelverse LLM 网关 token + Tavily（Perplexity 可选未启用）
 
 - [ ] **Phase 1 - 能力层骨架 + Skill Library（1 天）**
   - [ ] FastAPI 项目结构 + Notion client + LLM router（含 Langfuse 中转）
@@ -124,10 +124,10 @@ Notion 需求表 (触发源)
 
 LLM 全部走 `https://api.modelverse.cn/v1`（OpenAI 兼容协议），一个 token + base_url。当前 token 套餐**不支持 Claude/GPT 原厂**，所以路由切换为国产 reasoning 模型。
 
-| 任务 | 选用模型 | 来源 | 选型理由 |
+| 任务 | 选用模型/服务 | 来源 | 选型理由 |
 |---|---|---|---|
-| 关键词→竞品发现 | `moonshotai/Kimi-K2-Thinking` + Perplexity API | modelverse / 原厂 | Kimi 凭领域知识列候选，Perplexity 在线验证扩展 |
-| 公开网页摘要 | Tavily API + `deepseek-v4-flash` | 原厂 / modelverse | Tavily 搜索抓页面，DeepSeek 便宜做摘要 |
+| 关键词→竞品发现 | Tavily search + `moonshotai/Kimi-K2-Thinking` | 原厂 / modelverse | Tavily 搜领域 + Kimi 整理候选竞品（替代 Perplexity） |
+| 公开网页摘要 | Tavily search + `deepseek-v4-flash` | 原厂 / modelverse | Tavily 抓页面，DeepSeek 便宜做摘要 |
 | 登录站抓取清洗 | Playwright + `deepseek-v4-flash` | - / modelverse | 同上摘要 |
 | 结构化总结 / 需求拆解 | `moonshotai/Kimi-K2-Thinking` | modelverse | 推理强 + 中文好 |
 | PRD 长文 | `moonshotai/Kimi-K2-Thinking` | modelverse | 长文 + 结构化生成 |
@@ -136,7 +136,7 @@ LLM 全部走 `https://api.modelverse.cn/v1`（OpenAI 兼容协议），一个 t
 
 **注意成本**：所有可用模型都是 reasoning 型号（消耗 `reasoning_tokens`），单次完整需求估计 0.5-2 USD（高于原 Claude/GPT 设计）。`.env` 里 `COST_BUDGET_PER_REQUEST_USD` 调到 3。
 
-**外部依赖**：`PERPLEXITY_API_KEY` + `TAVILY_API_KEY`，modelverse 不提供搜索服务必须用原厂。
+**外部依赖**：`TAVILY_API_KEY` 已配置；`PERPLEXITY_API_KEY` 可选，启用后可替代 Tavily+Kimi 组合做更高质量的竞品发现。
 
 ---
 
