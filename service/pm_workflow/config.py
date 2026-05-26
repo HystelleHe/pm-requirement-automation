@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     llm_model_web_summary: str = Field(default="deepseek-v4-flash", alias="LLM_MODEL_WEB_SUMMARY")
     llm_model_prd_critic: str = Field(default="glm-5-turbo", alias="LLM_MODEL_PRD_CRITIC")
     llm_model_eval_judge: str = Field(default="glm-5-turbo", alias="LLM_MODEL_EVAL_JUDGE")
+    llm_model_research_synthesis: str = Field(
+        default="moonshotai/Kimi-K2-Thinking", alias="LLM_MODEL_RESEARCH_SYNTHESIS"
+    )
 
     # === Notion ===
     notion_api_key: str = Field(default="", alias="NOTION_API_KEY")

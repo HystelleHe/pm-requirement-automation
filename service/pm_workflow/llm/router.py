@@ -29,6 +29,7 @@ class LLMTask(str, Enum):
     WEB_SUMMARY = "web_summary"
     PRD_CRITIC = "prd_critic"
     EVAL_JUDGE = "eval_judge"
+    RESEARCH_SYNTHESIS = "research_synthesis"  # 调研结果整合写 research.md
 
 
 class ChatResponse(BaseModel):
