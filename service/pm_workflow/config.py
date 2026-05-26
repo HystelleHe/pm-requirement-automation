@@ -5,6 +5,7 @@
 - 启动时用 pydantic-settings 验证，缺关键变量直接报错而不是运行时崩溃
 """
 
+import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -12,8 +13,20 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-# 项目根目录：service/ 的上一级
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+def _resolve_project_root() -> Path:
+    """项目根目录：
+
+    - 本地开发：service/pm_workflow/config.py 上溯三级 = workflow/
+    - 容器内（Dockerfile 已 ENV PROJECT_ROOT=/app）：直接读环境变量
+    - 也可以通过 PROJECT_ROOT 显式覆盖（CI / 测试用）
+    """
+    env_root = os.environ.get("PROJECT_ROOT")
+    if env_root:
+        return Path(env_root).resolve()
+    return Path(__file__).resolve().parent.parent.parent
+
+
+PROJECT_ROOT = _resolve_project_root()
 
 
 class Settings(BaseSettings):

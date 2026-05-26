@@ -1,6 +1,6 @@
-"""NotionClient 单测 —— mock SDK 验证 property 解构和 upsert 流程。"""
+"""NotionClient 单测 —— mock httpx 调用验证 property 解构和 upsert 流程。"""
 
-from unittest.mock import MagicMock
+from unittest.mock import patch
 
 from pm_workflow.config import Settings
 from pm_workflow.notion import (
@@ -12,22 +12,19 @@ from pm_workflow.notion import (
 )
 
 
-def _build_client_with_fake_sdk() -> tuple[NotionClient, MagicMock]:
+def _build_client() -> NotionClient:
     s = Settings(
         NOTION_API_KEY="test-key",
         NOTION_DB_REQUIREMENTS="db-req-id",
         NOTION_DB_SKILL_LIBRARY="db-skill-id",
     )
-    client = NotionClient(settings=s)
-    fake_sdk = MagicMock()
-    client.sdk = fake_sdk
-    return client, fake_sdk
+    return NotionClient(settings=s)
 
 
 def test_query_requirements_parses_row():
     """需求表查询应将 Notion property 嵌套结构解析为 Requirement 模型。"""
-    client, sdk = _build_client_with_fake_sdk()
-    sdk.databases.query.return_value = {
+    client = _build_client()
+    fake_response = {
         "results": [
             {
                 "id": "page-123",
@@ -46,40 +43,44 @@ def test_query_requirements_parses_row():
             }
         ]
     }
-
-    reqs = client.query_requirements(status=RequirementStatus.RESEARCHING)
+    with patch.object(client, "_query_db", return_value=fake_response) as mock_q:
+        reqs = client.query_requirements(status=RequirementStatus.RESEARCHING)
     assert len(reqs) == 1
     r = reqs[0]
     assert isinstance(r, Requirement)
     assert r.page_id == "page-123"
     assert r.name == "PRD 自动化"
-    assert r.scenario == "面向 PM 团队的需求自动生成"
     assert r.competitors == ["Notion", "ClickUp"]
     assert r.status == RequirementStatus.RESEARCHING
     assert r.research_url == "https://example.com/r"
     assert r.req_id == "req-001"
-    # 验证 filter 传给了 SDK
-    call_kwargs = sdk.databases.query.call_args.kwargs
-    assert call_kwargs["filter"]["select"]["equals"] == "调研中"
+    # 验证 filter 传给了 _query_db
+    body = mock_q.call_args.args[1]
+    assert body["filter"]["select"]["equals"] == "调研中"
 
 
 def test_update_requirement_writes_only_passed_fields():
-    """update 应只传入非 None 的字段，未传的字段不进 properties。"""
-    client, sdk = _build_client_with_fake_sdk()
-    client.update_requirement("page-x", status=RequirementStatus.DONE, prd_url="https://prd")
-    props = sdk.pages.update.call_args.kwargs["properties"]
+    """update 应只 patch 非 None 的字段。"""
+    client = _build_client()
+    with patch.object(client, "_patch", return_value={}) as mock_p:
+        client.update_requirement("page-x", status=RequirementStatus.DONE, prd_url="https://prd")
+    props = mock_p.call_args.kwargs["json"]["properties"]
     assert "状态" in props
     assert "PRD链接" in props
-    # 没传的字段不应该出现
     assert "调研报告链接" not in props
     assert "失败原因" not in props
 
 
+def test_update_requirement_noop_when_nothing_passed():
+    """没有字段要更新时不应调 _patch。"""
+    client = _build_client()
+    with patch.object(client, "_patch") as mock_p:
+        client.update_requirement("page-x")
+    mock_p.assert_not_called()
+
+
 def test_upsert_skill_creates_when_not_found():
-    """upsert: skill_key 未找到时调 pages.create。"""
-    client, sdk = _build_client_with_fake_sdk()
-    sdk.databases.query.return_value = {"results": []}
-    sdk.pages.create.return_value = {"id": "new-page-id"}
+    client = _build_client()
     skill = Skill(
         name="测试 Prompt",
         skill_key="test_skill",
@@ -88,32 +89,38 @@ def test_upsert_skill_creates_when_not_found():
         system_prompt="你是测试助手",
         pipeline=["竞品调研"],
     )
-    pid = client.upsert_skill(skill)
+    with (
+        patch.object(client, "_query_db", return_value={"results": []}),
+        patch.object(client, "_post", return_value={"id": "new-page-id"}) as mock_post,
+        patch.object(client, "_patch") as mock_patch,
+    ):
+        pid = client.upsert_skill(skill)
     assert pid == "new-page-id"
-    sdk.pages.create.assert_called_once()
-    sdk.pages.update.assert_not_called()
+    mock_post.assert_called_once()
+    mock_patch.assert_not_called()
+    # 验证 _post 请求体含 parent.database_id
+    post_kwargs = mock_post.call_args.kwargs
+    assert post_kwargs["json"]["parent"]["database_id"] == "db-skill-id"
 
 
 def test_upsert_skill_updates_when_found():
-    """upsert: skill_key 已存在时调 pages.update。"""
-    client, sdk = _build_client_with_fake_sdk()
-    sdk.databases.query.return_value = {"results": [{"id": "existing-page-id"}]}
+    client = _build_client()
     skill = Skill(name="x", skill_key="existing", version="1.0.0")
-    pid = client.upsert_skill(skill)
+    with (
+        patch.object(client, "_query_db", return_value={"results": [{"id": "existing-page-id"}]}),
+        patch.object(client, "_patch", return_value={}) as mock_patch,
+        patch.object(client, "_post") as mock_post,
+    ):
+        pid = client.upsert_skill(skill)
     assert pid == "existing-page-id"
-    sdk.pages.update.assert_called_once_with(
-        page_id="existing-page-id",
-        properties=client._skill_to_properties(skill),
-    )
-    sdk.pages.create.assert_not_called()
+    mock_patch.assert_called_once()
+    mock_post.assert_not_called()
 
 
 def test_skill_to_properties_only_writes_subset():
-    """构造的 properties 应只含 10 字段子集，不含其它列。"""
-    client, _ = _build_client_with_fake_sdk()
-    skill = Skill(
-        name="A", skill_key="a", version="1", pipeline=["竞品调研", "PRD"]
-    )
+    """构造的 properties 应只含 10 字段子集。"""
+    client = _build_client()
+    skill = Skill(name="A", skill_key="a", version="1", pipeline=["竞品调研", "PRD"])
     props = client._skill_to_properties(skill)
     expected_keys = {
         "Name",

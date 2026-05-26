@@ -19,6 +19,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # 复制应用代码
 COPY pm_workflow ./pm_workflow
 
+# 让 config.py 的路径计算锁定到 /app（skill-library / outputs 在这里 mount）
+ENV PROJECT_ROOT=/app
+
 EXPOSE 8000
 
 # 容器内健康检查 —— compose 也会用同样路径
