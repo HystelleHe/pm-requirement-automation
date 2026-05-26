@@ -75,6 +75,10 @@ class Settings(BaseSettings):
     # === Service ===
     service_port: int = Field(default=8000, alias="SERVICE_PORT")
 
+    # === 飞书通知 ===
+    # 未填则降级 stdout 打印，不阻塞业务
+    feishu_webhook_url: str = Field(default="", alias="FEISHU_WEBHOOK_URL")
+
     # === 成本控制 ===
     cost_budget_per_request_usd: float = Field(default=3.0, alias="COST_BUDGET_PER_REQUEST_USD")
     critic_max_rounds: int = Field(default=2, alias="CRITIC_MAX_ROUNDS")
