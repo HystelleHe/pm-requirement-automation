@@ -7,12 +7,22 @@
 
 ## ⚡ Next Step（下次回到项目先看这里）
 
-**当前状态**：✅ **Phase 0 + 1 + 2 + 3 全部完成** — 调研 + 拆解 两阶段串通，单需求 ~2.5 分钟从场景到结构化用户故事
+**当前状态**：✅ **Phase 0 + 1 + 2 + 3 + 4 全部完成** — 三阶段端到端串通（调研→拆解→PRD），含跨家 Critic 修订循环
 
 **下一步动作**：
-1. ⏳ 进入 Phase 4（PRD Agent + Critic）— 综合 research + breakdown → PRD，含 Kimi 写 + GLM 跨家 Critic 修订循环
-2. （可选）接 Langfuse trace 看 LLM 调用全链路
-3. （Backlog）Playwright 登录站爬虫；Notion 子页面去重（每次跑都创建新 page）
+1. ⏳ Phase 5（向量库 + Few-shot）— Qdrant 索引历史 research/PRD，让 agent 调研/PRD 时检索相似案例
+2. （可选）prd_writer skill 增强：吸收 round1 常见 critic 反馈（明确不做章节 / 业务目标 / 决策开放问题），减少修订轮次
+3. （可选）接 Langfuse trace 看 LLM 调用全链路
+4. （Backlog）Playwright 登录站爬虫；Notion 子页面去重（每次跑都创建新 page）
+
+**Phase 4 已完成**（2026-05-26）：
+- ✅ 新增 `prd_critic` skill（GLM 跨家审校，输出 severity 分级 issues + needs_revision 判定）
+- ✅ `PRDAgent`：Kimi 初版 → GLM critic → Kimi 按 issues 修订 → 再 critic，最多 `CRITIC_MAX_ROUNDS=2` 轮
+- ✅ 修订时沿用 prd_writer system prompt + 拼接「上一版 PRD + critic 反馈」，无需额外 reviser skill
+- ✅ `POST /prd` + `pm-workflow prd` CLI 等价入口；orchestrator 状态机：…→PRD生成中→（成功置「已完成」+ 回写 PRD链接 / 失败置失败）
+- ✅ 每轮版本备份 prd_v0/v1/v2.md；prd_raw.json 含全部 critic 历史
+- ✅ 端到端实测（req-sample-001）：~4 分钟，50k tokens，2 轮 critic（round1 score=90/4 issues 触发修订，round2 score=85 修订后仍存 1 P0 矛盾达上限）
+- ✅ Notion 需求行状态自动迁到「已完成」，3 个 URL 字段全部填齐
 
 **Phase 3 已完成**（2026-05-26）：
 - ✅ 3 个 commit：拆解 skill / BreakdownAgent + orchestrator / API+CLI+E2E
@@ -67,10 +77,10 @@
   - [x] 读取 outputs/{req_id}/research.md + requirement_breakdown skill → JSON 用户故事 + 优先级
   - [x] 渲染 breakdown.md（按 P0/P1/P2 分组 + 验收标准 + out_of_scope + open_questions）+ 上传 Notion
 
-- [ ] **Phase 4 - PRD Agent + Critic（2 天）**
-  - [ ] 分章节生成 PRD（背景/目标/用户故事/功能/非功能）
-  - [ ] GPT-4 Critic → Claude 修订循环（最多 2 轮）
-  - [ ] 产出写到 `outputs/{req_id}/prd.md`
+- [x] **Phase 4 - PRD Agent + Critic（2 天）**
+  - [x] 按章节生成 PRD（背景/目标/明确不做/用户故事/功能/非功能/指标/风险） — Kimi-K2-Thinking
+  - [x] GLM-5-turbo 跨家 Critic → Kimi 修订循环（最多 `CRITIC_MAX_ROUNDS=2` 轮，缺省 2）
+  - [x] 产出写到 `outputs/{req_id}/prd.md`（含 prd_v0/v1/v2.md 版本备份 + prd_raw.json 修订历史）
 
 - [ ] **Phase 5 - 向量库 + Few-shot（1 天）**
   - [ ] Qdrant 索引：历史调研/PRD 入库（按场景分 collection）

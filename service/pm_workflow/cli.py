@@ -3,6 +3,7 @@
 常用：
 - `pm-workflow info` 看配置摘要
 - `pm-workflow scan-new-requirements` 列出待处理需求（Phase 2-4 用来人工触发）
+- `pm-workflow research / breakdown / prd` 跑对应阶段（接力调用）
 - `pm-workflow skills-sync` 手动同步本地 skill-library/ 到 Notion
 - `pm-workflow skills-list --pipeline 竞品调研` 看 Skill Library 内容
 """
@@ -202,6 +203,69 @@ def breakdown(page_id: str | None, no_notion: bool):
         console.print(f"  [yellow]非致命错误[/yellow]：{result.errors}")
     if not no_notion:
         console.print("  请去 Notion 需求行查看「需求拆解链接」字段")
+
+
+@cli.command()
+@click.option("--page-id", default=None, help="需求行的 Notion page UUID（不填则取第一个有 breakdown.md 的需求）")
+@click.option("--no-notion", is_flag=True, help="仅本地落盘，不上传 Notion")
+def prd(page_id: str | None, no_notion: bool):
+    """对单个需求跑 PRD 生成 + Critic 修订循环（前置：先跑过 research + breakdown）。"""
+    from pm_workflow.agents.orchestrator import run_prd_for_requirement
+    from pm_workflow.config import get_settings
+    from pm_workflow.notion import NotionClient
+
+    settings = get_settings()
+    notion = NotionClient()
+    all_reqs = notion.query_requirements(status=None)
+
+    if page_id:
+        target = next((r for r in all_reqs if r.page_id == page_id), None)
+        if not target:
+            console.print(f"[red]未找到需求 page_id={page_id}[/red]")
+            raise SystemExit(1)
+    else:
+        # 找第一个本地同时有 research.md + breakdown.md 的需求
+        target = None
+        for r in all_reqs:
+            rid = r.req_id or f"req-{r.page_id[:8]}"
+            d = settings.outputs_dir / rid
+            if (d / "research.md").exists() and (d / "breakdown.md").exists():
+                target = r
+                break
+        if not target:
+            console.print(
+                "[yellow]没有需求同时具备 research.md + breakdown.md，请先跑前两阶段[/yellow]"
+            )
+            raise SystemExit(0)
+
+    console.print(f"[bold]开始 PRD 生成：[/bold] {target.name}  ({target.page_id[:13]}...)")
+    console.print(f"  Critic 上限轮次：{settings.critic_max_rounds}")
+    try:
+        result = run_prd_for_requirement(
+            target, notion=notion, upload_to_notion=not no_notion
+        )
+    except FileNotFoundError as e:
+        console.print(f"[red]前置依赖缺失[/red]：{e}")
+        raise SystemExit(2)
+
+    console.print(f"[green]✔[/green] PRD 完成")
+    console.print(f"  req_id      : {result.req_id}")
+    console.print(f"  修订次数    : {result.revisions}")
+    if result.reviews:
+        console.print(f"  Critic 历史 :")
+        for r in result.reviews:
+            mark = "[red]✗ 需修订[/red]" if r.needs_revision else "[green]✓ 通过[/green]"
+            console.print(
+                f"    Round {r.round}: score={r.overall_score} issues={len(r.issues)} {mark}"
+            )
+            if r.summary:
+                console.print(f"      {r.summary}")
+    console.print(f"  本地文件    : {result.output_path}")
+    console.print(f"  token 用量  : {result.llm_usage.get('total_tokens', 0)}")
+    if result.errors:
+        console.print(f"  [yellow]非致命错误[/yellow]：{result.errors}")
+    if not no_notion:
+        console.print("  请去 Notion 需求行查看「PRD链接」字段，状态应为「已完成」")
 
 
 @cli.command(name="skills-list")
