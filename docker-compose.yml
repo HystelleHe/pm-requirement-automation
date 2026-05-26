@@ -1,6 +1,6 @@
 # PM 需求自动化系统 - 整体编排
 # 一个 docker-compose up 起 5 个容器，迁移单元
-version: "3.9"
+# Compose v2 已废弃 version 字段
 
 services:
   # ---- 数据库：n8n + langfuse 共用 ----
