@@ -96,6 +96,56 @@ def skills_sync():
     console.print(table)
 
 
+@cli.command()
+@click.option("--page-id", default=None, help="需求行的 Notion page UUID（不填则取第一个待处理）")
+@click.option("--max-competitors", default=6, type=int)
+@click.option("--no-notion", is_flag=True, help="仅本地落盘，不上传 Notion")
+def research(page_id: str | None, max_competitors: int, no_notion: bool):
+    """对单个需求跑完整调研流程（约 1-3 分钟）。"""
+    from pm_workflow.agents.orchestrator import run_research_for_requirement
+    from pm_workflow.notion import NotionClient
+    from pm_workflow.notion.models import RequirementStatus
+
+    notion = NotionClient()
+    if page_id:
+        all_reqs = notion.query_requirements(status=None)
+        target = next((r for r in all_reqs if r.page_id == page_id), None)
+        if not target:
+            console.print(f"[red]未找到需求 page_id={page_id}[/red]")
+            raise SystemExit(1)
+    else:
+        pending = notion.query_requirements(status=RequirementStatus.PENDING)
+        if not pending:
+            console.print("[yellow]没有「待处理」状态的需求[/yellow]")
+            raise SystemExit(0)
+        target = pending[0]
+
+    console.print(f"[bold]开始调研：[/bold] {target.name}  ({target.page_id[:13]}...)")
+    console.print(f"  场景：{target.scenario[:80]}...")
+    console.print(f"  指定竞品：{', '.join(target.competitors) or '(无)'}")
+    console.print()
+
+    result = run_research_for_requirement(
+        target,
+        notion=notion,
+        upload_to_notion=not no_notion,
+        max_competitors=max_competitors,
+    )
+
+    console.print(f"[green]✔[/green] 调研完成")
+    console.print(f"  req_id      : {result.req_id}")
+    console.print(f"  竞品数      : {len(result.competitors)}")
+    for c in result.competitors:
+        # rich 会把方括号当作样式标签，转义掉
+        console.print(f"    - \\[{c.source}] {c.name}")
+    console.print(f"  本地文件    : {result.output_path}")
+    console.print(f"  token 用量  : {result.llm_usage.get('total_tokens', 0)}")
+    if result.errors:
+        console.print(f"  [yellow]非致命错误[/yellow]：{result.errors}")
+    if not no_notion:
+        console.print("  请去 Notion 需求行查看「调研报告链接」字段")
+
+
 @cli.command(name="skills-list")
 @click.option("--pipeline", default=None, help="按适用管线过滤，如 竞品调研/PRD/Figma")
 @click.option("--all", "show_all", is_flag=True, help="包含非 Active 状态")

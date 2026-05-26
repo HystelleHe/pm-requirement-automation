@@ -7,12 +7,19 @@
 
 ## ⚡ Next Step（下次回到项目先看这里）
 
-**当前状态**：✅ **Phase 0 + Phase 1 全部完成** — 5 容器架构跑通，CLI 能扫到 Notion 需求，Skill Library 双向同步
+**当前状态**：✅ **Phase 0 + 1 + 2 全部完成** — 一个真实需求可以从 Notion 触发跑完整调研产出 research.md 并回写 Notion
 
 **下一步动作**：
-1. ⏳ 进入 Phase 2（调研 Agent）— 用 Tavily search + Kimi-K2-Thinking 实现关键词→竞品发现，再用 Playwright 抓登录站
-2. Notion 需求表已有 1 条示例需求（"示例：竞品调研自动化工具"，待处理）可用作端到端调试输入
-3. （可选）Phase 2 真跑通后再考虑接 Langfuse trace（去 http://localhost:3000 注册建 project，把 PUBLIC/SECRET KEY 写入 `.env`）
+1. ⏳ 进入 Phase 3（需求拆解 Agent）— 输入调研结果 + 拆解 Prompt → 用户故事 + 优先级
+2. （可选）接 Langfuse trace（去 http://localhost:3000 注册建 project，把 PUBLIC/SECRET KEY 写入 `.env`，所有 LLM 调用自动可观测）
+3. （Backlog）Playwright 登录站爬虫 —— Phase 2 MVP 用 Tavily search 已够，登录站留到调研质量瓶颈时再补
+
+**Phase 2 已完成**（2026-05-26）：
+- ✅ 5 个 commit：Tavily 客户端 / Playwright 公开抓取 / 调研 Agent / Notion 回写 / API+CLI
+- ✅ `POST /research` 与 `pm-workflow research` 等价入口
+- ✅ orchestrator 状态机：待处理→调研中→（成功保留调研中等下游 Phase 3 接力 / 失败置失败+原因）
+- ✅ 端到端实测：示例需求 87.8s 调研，4 竞品（含 LLM 智能识别噪音），2751-3477 tokens
+- ✅ research.md 上传成 Notion 子页面，需求表「调研报告链接」回写
 
 **Phase 1 已完成**（2026-05-26）：
 - ✅ FastAPI 项目结构（pyproject + Dockerfile + 6 子包 + 配置 + 测试）
@@ -43,11 +50,11 @@
   - [x] 服务启动时单向同步 `skill-library/` → Notion Skill Library（hash 缓存避免无意义打 API）
   - [x] CLI 跑通"读 Notion 需求 → 打印场景"（`scan-new-requirements` 子命令）
 
-- [ ] **Phase 2 - 调研 Agent（2 天）**
-  - [ ] Perplexity 关键词发现
-  - [ ] Playwright 登录站爬虫（先做 1 个站点）
-  - [ ] Claude Sonnet 结构化总结
-  - [ ] 产出写到 `outputs/{req_id}/research.md` + Notion 链接
+- [x] **Phase 2 - 调研 Agent（2 天）**
+  - [x] ~~Perplexity~~ Tavily + Kimi-K2-Thinking 关键词→竞品发现
+  - [x] Playwright 公开网页抓取（登录站爬虫留作 backlog，MVP 用 Tavily search 已够）
+  - [x] Kimi-K2-Thinking 结构化总结（research_synthesis skill）
+  - [x] 产出写到 `outputs/{req_id}/research.md` + Notion 子页面 + 回写需求表「调研报告链接」
 
 - [ ] **Phase 3 - 需求拆解 Agent（1 天）**
   - [ ] 读取调研结果 + 拆解 Prompt → 用户故事 + 优先级
