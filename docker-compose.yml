@@ -39,6 +39,10 @@ services:
       N8N_HOST: ${N8N_HOST}
       WEBHOOK_URL: http://${N8N_HOST}:${N8N_PORT}/
       GENERIC_TIMEZONE: Asia/Shanghai
+      # workflow JSON 里用 {{ $env.X }} 读取，避免把 KEY/ID 写死在 JSON 里
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      NOTION_API_KEY: ${NOTION_API_KEY}
+      NOTION_DB_REQUIREMENTS: ${NOTION_DB_REQUIREMENTS}
     volumes:
       - n8n_data:/home/node/.n8n
       - ./n8n/workflows:/workflows

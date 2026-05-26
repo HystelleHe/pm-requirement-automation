@@ -1,0 +1,198 @@
+{
+  "id": "pm-workflow-main-v1",
+  "name": "PM 需求自动化主流程",
+  "active": false,
+  "nodes": [
+    {
+      "id": "schedule",
+      "name": "每 2 分钟轮询",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            { "field": "minutes", "minutesInterval": 2 }
+          ]
+        }
+      }
+    },
+    {
+      "id": "notion_query",
+      "name": "查待处理需求",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.notion.com/v1/databases/{{ $env.NOTION_DB_REQUIREMENTS }}/query",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "=Bearer {{ $env.NOTION_API_KEY }}" },
+            { "name": "Notion-Version", "value": "2022-06-28" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"filter\": {\n    \"property\": \"状态\",\n    \"select\": {\n      \"equals\": \"待处理\"\n    }\n  },\n  \"sorts\": [{ \"property\": \"创建时间\", \"direction\": \"ascending\" }],\n  \"page_size\": 5\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "split_results",
+      "name": "拆分结果数组",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      }
+    },
+    {
+      "id": "if_has_id",
+      "name": "有需求行？",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "loose" },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "1",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": { "type": "string", "operation": "notEmpty" }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "split_in_batches",
+      "name": "逐条处理（串行）",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1120, 300],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "post_research",
+      "name": "调研 POST /research",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://service:8000/research",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"req_page_id\": \"{{ $json.id }}\",\n  \"upload_to_notion\": true,\n  \"max_competitors\": 6\n}",
+        "options": {
+          "timeout": 360000
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "post_breakdown",
+      "name": "拆解 POST /breakdown",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1560, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://service:8000/breakdown",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"req_page_id\": \"{{ $('逐条处理（串行）').item.json.id }}\",\n  \"upload_to_notion\": true\n}",
+        "options": {
+          "timeout": 240000
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "post_prd",
+      "name": "PRD POST /prd",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1780, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "http://service:8000/prd",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"req_page_id\": \"{{ $('逐条处理（串行）').item.json.id }}\",\n  \"upload_to_notion\": true\n}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "每 2 分钟轮询": {
+      "main": [
+        [{ "node": "查待处理需求", "type": "main", "index": 0 }]
+      ]
+    },
+    "查待处理需求": {
+      "main": [
+        [{ "node": "拆分结果数组", "type": "main", "index": 0 }]
+      ]
+    },
+    "拆分结果数组": {
+      "main": [
+        [{ "node": "有需求行？", "type": "main", "index": 0 }]
+      ]
+    },
+    "有需求行？": {
+      "main": [
+        [{ "node": "逐条处理（串行）", "type": "main", "index": 0 }],
+        []
+      ]
+    },
+    "逐条处理（串行）": {
+      "main": [
+        [],
+        [{ "node": "调研 POST /research", "type": "main", "index": 0 }]
+      ]
+    },
+    "调研 POST /research": {
+      "main": [
+        [{ "node": "拆解 POST /breakdown", "type": "main", "index": 0 }]
+      ]
+    },
+    "拆解 POST /breakdown": {
+      "main": [
+        [{ "node": "PRD POST /prd", "type": "main", "index": 0 }]
+      ]
+    },
+    "PRD POST /prd": {
+      "main": [
+        [{ "node": "逐条处理（串行）", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "saveDataSuccessExecution": "all",
+    "saveDataErrorExecution": "all"
+  },
+  "pinData": {},
+  "staticData": null,
+  "meta": {
+    "description": "Notion 需求表→自动跑 research/breakdown/prd 三阶段。失败由 service 自己写回 Notion+发飞书，n8n 只负责轮询和串联。"
+  }
+}
