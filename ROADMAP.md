@@ -7,12 +7,19 @@
 
 ## ⚡ Next Step（下次回到项目先看这里）
 
-**当前状态**：Plan 已确定，**待用户定义协作规则后开始实施**
+**当前状态**：Phase 0 实施中 — 项目骨架 + Notion 4 库已完成，**等待用户提供其余 5 个 API Key 后 Phase 0 全部结束**
 
 **下一步动作**：
-1. ⏳ 用户补充「规则」到下方 `## 规则定义（待补充）` 章节
-2. ⏳ 规则确认后，从 `Phase 0：脚手架` 开始实施
-3. 实施每完成一个 Phase，回来这里把对应 checkbox 打勾
+1. ⏳ 用户提供 ANTHROPIC / OPENAI / PERPLEXITY / DEEPSEEK / TAVILY 5 个 API Key 填入 `.env`
+2. ⏳ Phase 0 收尾：git commit + 把本章节 checkbox 全部打勾
+3. ⏳ 进入 Phase 1（能力层骨架 + Skill Library 同步）
+
+**已完成**（2026-05-26）：
+- ✅ 项目骨架 + git init + 目录结构
+- ✅ `docker-compose.yml`（postgres + n8n + qdrant + langfuse 4 容器；service 待 Phase 1 启用）
+- ✅ `.env.example` + `README.md` + `infra/postgres/init.sql`
+- ✅ Notion 4 个数据库（3 个新建 + 1 个复用 workspace 顶层已有的 Skill Library）
+- ✅ `NOTION_API_KEY` + 4 个 DB ID 写入 `.env`
 
 ---
 
@@ -21,14 +28,14 @@
 总工期约 **9-10 天**。建议 Phase 0-6 必做，Phase 7 二期。
 
 - [ ] **Phase 0 - 脚手架（0.5 天）**
-  - [ ] 写 `docker-compose.yml`（n8n + service + Qdrant + Langfuse + PostgreSQL）
-  - [ ] 在 Notion 建 4 个数据库，记录 Database ID 到 `.env`
-  - [ ] 配置所有 API Key（Claude / OpenAI / Perplexity / DeepSeek / Tavily / Notion）
+  - [x] 写 `docker-compose.yml`（n8n + service + Qdrant + Langfuse + PostgreSQL）
+  - [x] 在 Notion 建 4 个数据库（3 新建 + 1 复用 Skill Library），Database ID 写入 `.env`
+  - [ ] 配置所有 API Key（Claude / OpenAI / Perplexity / DeepSeek / Tavily / Notion — Notion 已完成）
 
 - [ ] **Phase 1 - 能力层骨架 + Skill Library（1 天）**
   - [ ] FastAPI 项目结构 + Notion client + LLM router（含 Langfuse 中转）
-  - [ ] 现有 Prompt 整理到 `skill-library/` Markdown
-  - [ ] 服务启动时自动同步 `skill-library/` → Notion
+  - [ ] 现有 Prompt 整理到 `skill-library/*.md`（frontmatter 只声明本项目用的 10 个字段，见 schema B）
+  - [ ] 服务启动时单向同步 `skill-library/` → Notion Skill Library（**只读写 10 字段子集，不动其他列**）
   - [ ] CLI 入口能跑通"读 Notion 需求 → 打印场景"
 
 - [ ] **Phase 2 - 调研 Agent（2 天）**
@@ -166,22 +173,33 @@ pm-workflow/
 
 ## 📊 Notion 数据库 schema（4 个库）
 
-实施 Phase 0 时按此建库：
+> 4 个数据库**已建好**，ID 在 `.env`。下面记录每个库的实际 schema，作为开发参考。父页面 ID：`NOTION_PARENT_PAGE_ID` = `36c0820f-9dba-80cd-8d80-c2583a6db942`。
 
-**A. 需求表（触发源）**
+**A. PM 需求表（触发源）** — `NOTION_DB_REQUIREMENTS`
 - 需求名称(Title) / 场景描述(Text) / 指定竞品(Multi-select) / 自动发现关键词(Text)
 - 状态(Select: 待处理/调研中/拆解中/PRD生成中/已完成/失败)
-- 调研报告链接(URL) / 需求拆解链接(URL) / PRD 链接(URL) / 失败原因(Text)
+- 调研报告链接(URL) / 需求拆解链接(URL) / PRD链接(URL) / 失败原因(Text)
+- req_id(Text) — 对应 `outputs/{req_id}/` 目录
+- 创建时间(Created time，Notion 自动)
 
-**B. Skill Library**
-- Prompt 名称(Title) / 场景(Select: 调研/拆解/PRD/通用) / 阶段(Select: 提取/总结/生成/审校)
-- Prompt 内容(Text 含 `{{variable}}`) / 推荐模型(Select) / 版本(Number) / 本地路径(Text)
+**B. Skill Library（复用 workspace 顶层共享资产）** — `NOTION_DB_SKILL_LIBRARY`
+- 这个库**早于本项目存在**（2026-04-29 建），是用户的通用 Prompt 仓库，30+ 字段企业级 schema
+- 本项目**只读写一个 10 字段子集**，其他列保留给原有用途，本项目代码不动它们
+- 本项目使用的字段子集：
+  - `Name` (Title) / `Skill Key` (Text) / `Status` (Select) / `Version` (Text)
+  - `Description` (Text) / `System Prompt` (Text) / `User Prompt Template` (Text)
+  - `Input Variables` (Text，JSON) / `Output Schema` (Text，JSON)
+  - `Model Preference` (Select: auto/claude/gpt/moonshot/deepseek)
+  - `适用管线` (Multi-select: 竞品调研/PRD/Figma)
+- 本地 `skill-library/*.md` 文件的 frontmatter **只声明上面 10 个字段**，启动同步时**只读写这 10 列**
 
-**C. 调研结果缓存库**（同竞品 24h 内复用）
+**C. 调研结果缓存** — `NOTION_DB_RESEARCH_CACHE`（同竞品 24h 内复用）
 - 竞品名称(Title) / 最后调研时间(Date) / 缓存数据链接(URL)
+- 来源(Select: 公开网页/登录站抓取/Perplexity) / req_id(Text)
 
-**D. Eval 数据集库**
-- 用例名称(Title) / 输入需求(Text) / 金标 PRD 链接(URL)
+**D. Eval 数据集** — `NOTION_DB_EVAL`
+- 用例名称(Title) / 输入需求(Text) / 金标PRD链接(URL)
+- 场景(Select: 调研/拆解/PRD/端到端) / 启用(Checkbox)
 
 ---
 
