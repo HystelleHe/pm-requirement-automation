@@ -21,6 +21,10 @@ dependencies = [
     "tavily-python>=0.5,<1.0",
     # Skill Library 同步：md frontmatter 解析
     "python-frontmatter>=1.1,<2.0",
+    # 网页抓取：headless chromium 跑 JS 渲染的页面
+    "playwright>=1.49,<2.0",
+    # 正文提取：从 HTML 抠出主要内容，避免给 LLM 喂大量导航/页脚
+    "trafilatura>=1.12,<3.0",
     # LLM 观测
     "langfuse>=2.50,<3.0",
     # CLI 框架

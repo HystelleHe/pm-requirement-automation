@@ -16,6 +16,11 @@ COPY pyproject.toml ./
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -e .
 
+# 安装 Playwright chromium + 其运行所需的系统依赖（一次 ~150MB）
+# 用 --with-deps 让 playwright 自动解决 libnss3/libatk 等繁琐依赖
+RUN python -m playwright install --with-deps chromium && \
+    rm -rf /var/lib/apt/lists/*
+
 # 复制应用代码
 COPY pm_workflow ./pm_workflow
 
