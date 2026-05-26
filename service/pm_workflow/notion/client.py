@@ -19,6 +19,7 @@ from typing import Any
 import httpx
 
 from pm_workflow.config import Settings, get_settings
+from pm_workflow.notion.markdown import markdown_to_notion_blocks
 from pm_workflow.notion.models import (
     Requirement,
     RequirementStatus,
@@ -264,3 +265,81 @@ class NotionClient:
             "Model Preference": {"select": {"name": skill.model_preference}},
             "适用管线": {"multi_select": [{"name": p} for p in skill.pipeline if p]},
         }
+
+    # ----------------------- 通用：创建带 markdown 内容的子页面 -----------------------
+
+    def create_subpage_with_markdown(
+        self,
+        *,
+        parent_page_id: str,
+        title: str,
+        markdown: str,
+    ) -> dict[str, str]:
+        """在 parent_page_id 下建一个普通 page，正文是 markdown 转的 Notion blocks。
+
+        返回 {'page_id': ..., 'url': ...}。
+
+        Notion pages.create 单次 children 上限 100 块；如果 markdown 转出来超过，
+        会先建空页再 append_children 分批。
+        """
+        all_blocks = markdown_to_notion_blocks(markdown)
+
+        first_batch = all_blocks[:100]
+        rest_batches = [all_blocks[i : i + 100] for i in range(100, len(all_blocks), 100)]
+
+        body = {
+            "parent": {"page_id": parent_page_id},
+            "properties": {"title": [{"type": "text", "text": {"content": title}}]},
+            "children": first_batch,
+        }
+        created = self._post("/pages", json=body)
+        page_id = created["id"]
+        url = created.get("url", "")
+        logger.info("子页面创建：%s (parent=%s, 共 %d blocks)", page_id, parent_page_id, len(all_blocks))
+
+        # 追加剩余 blocks
+        for batch in rest_batches:
+            self._patch(f"/blocks/{page_id}/children", json={"children": batch})
+
+        return {"page_id": page_id, "url": url}
+
+    # ----------------------- 调研结果缓存库 -----------------------
+
+    def upsert_research_cache_entry(
+        self,
+        *,
+        competitor: str,
+        cache_url: str,
+        source: str = "公开网页",
+        req_id: str = "",
+    ) -> str:
+        """在 调研结果缓存 库中按 竞品名称 upsert 一行。返回 page_id。"""
+        existing_resp = self._query_db(
+            self.settings.notion_db_research_cache,
+            {
+                "filter": {"property": "竞品名称", "title": {"equals": competitor}},
+                "page_size": 1,
+            },
+        )
+        from datetime import datetime, timezone
+
+        props: dict[str, Any] = {
+            "竞品名称": {"title": _to_title(competitor)},
+            "最后调研时间": {"date": {"start": datetime.now(timezone.utc).isoformat()}},
+            "缓存数据链接": {"url": cache_url or None},
+            "来源": {"select": {"name": source}},
+            "req_id": {"rich_text": _to_rich_text(req_id)},
+        }
+        existing = existing_resp.get("results", [])
+        if existing:
+            pid = existing[0]["id"]
+            self._patch(f"/pages/{pid}", json={"properties": props})
+            return pid
+        created = self._post(
+            "/pages",
+            json={
+                "parent": {"database_id": self.settings.notion_db_research_cache},
+                "properties": props,
+            },
+        )
+        return created["id"]
