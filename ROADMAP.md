@@ -10,9 +10,9 @@
 **当前状态**：Phase 0 实施中 — 项目骨架 + Notion 4 库已完成，**等待用户提供其余 5 个 API Key 后 Phase 0 全部结束**
 
 **下一步动作**：
-1. ⏳ 用户提供 ANTHROPIC / OPENAI / PERPLEXITY / DEEPSEEK / TAVILY 5 个 API Key 填入 `.env`
+1. ⏳ 用户提供 `PERPLEXITY_API_KEY` + `TAVILY_API_KEY`（搜索服务，Phase 2 才阻塞，可延后）
 2. ⏳ Phase 0 收尾：git commit + 把本章节 checkbox 全部打勾
-3. ⏳ 进入 Phase 1（能力层骨架 + Skill Library 同步）
+3. ⏳ 进入 Phase 1（能力层骨架 + Skill Library 同步）— **不需要等搜索 KEY**
 
 **已完成**（2026-05-26）：
 - ✅ 项目骨架 + git init + 目录结构
@@ -20,6 +20,8 @@
 - ✅ `.env.example` + `README.md` + `infra/postgres/init.sql`
 - ✅ Notion 4 个数据库（3 个新建 + 1 个复用 workspace 顶层已有的 Skill Library）
 - ✅ `NOTION_API_KEY` + 4 个 DB ID 写入 `.env`
+- ✅ LLM 网关定型：`modelverse.cn`（OpenAI 兼容协议，token 已写入 `.env`）
+- ✅ 模型路由重新设计：Kimi-K2-Thinking（重型推理）+ deepseek-v4-flash（摘要）+ glm-5-turbo（跨家 Critic）
 
 ---
 
@@ -112,23 +114,29 @@ Notion 需求表 (触发源)
 | n8n 部署 | self-hosted Docker |
 | 触发方式 | Notion 需求表新增行 |
 | 工作流形态 | 全自动端到端（中间产物落 Notion，可独立 review） |
-| LLM 模型 | 多模型混搭（见下表） |
+| LLM 模型 | 走 modelverse.cn 聚合网关（OpenAI 兼容协议），具体路由见下表 |
 | Skill Library | 现有部分 Prompt + 本地 md 为 SoT + Notion 镜像 |
 | 竞品调研深度 | 指定竞品 + 关键词自动发现 + 登录站抓取 |
 | 架构分层 | n8n 编排 + FastAPI 能力层（保证可迁移） |
 | 优化点 | 全部纳入：向量库/Critic/MD存正文/三阶段/Langfuse/Eval |
 
-**多模型路由**：
+**多模型路由**（modelverse 聚合网关 + 2 个外部搜索 API）：
 
-| 任务 | 模型 |
-|---|---|
-| 关键词→竞品发现 | Perplexity |
-| 公开网页摘要 | Tavily + DeepSeek |
-| 登录站抓取清洗 | Playwright + DeepSeek |
-| 结构化总结 / 需求拆解 | Claude Sonnet |
-| PRD 长文 | Claude Opus |
-| PRD Critic | GPT-4 |
-| Eval Judge | Claude Sonnet |
+LLM 全部走 `https://api.modelverse.cn/v1`（OpenAI 兼容协议），一个 token + base_url。当前 token 套餐**不支持 Claude/GPT 原厂**，所以路由切换为国产 reasoning 模型。
+
+| 任务 | 选用模型 | 来源 | 选型理由 |
+|---|---|---|---|
+| 关键词→竞品发现 | `moonshotai/Kimi-K2-Thinking` + Perplexity API | modelverse / 原厂 | Kimi 凭领域知识列候选，Perplexity 在线验证扩展 |
+| 公开网页摘要 | Tavily API + `deepseek-v4-flash` | 原厂 / modelverse | Tavily 搜索抓页面，DeepSeek 便宜做摘要 |
+| 登录站抓取清洗 | Playwright + `deepseek-v4-flash` | - / modelverse | 同上摘要 |
+| 结构化总结 / 需求拆解 | `moonshotai/Kimi-K2-Thinking` | modelverse | 推理强 + 中文好 |
+| PRD 长文 | `moonshotai/Kimi-K2-Thinking` | modelverse | 长文 + 结构化生成 |
+| PRD Critic | `glm-5-turbo` | modelverse | **必须与生成模型不同家**，避免审校盲点 |
+| Eval Judge | `glm-5-turbo` | modelverse | 同 Critic，不同家保证客观 |
+
+**注意成本**：所有可用模型都是 reasoning 型号（消耗 `reasoning_tokens`），单次完整需求估计 0.5-2 USD（高于原 Claude/GPT 设计）。`.env` 里 `COST_BUDGET_PER_REQUEST_USD` 调到 3。
+
+**外部依赖**：`PERPLEXITY_API_KEY` + `TAVILY_API_KEY`，modelverse 不提供搜索服务必须用原厂。
 
 ---
 
