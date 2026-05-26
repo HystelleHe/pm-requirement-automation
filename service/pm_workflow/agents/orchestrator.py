@@ -13,7 +13,8 @@ import logging
 import traceback
 
 from pm_workflow.agents.breakdown import BreakdownAgent
-from pm_workflow.agents.models import BreakdownResult, ResearchResult
+from pm_workflow.agents.models import BreakdownResult, PRDResult, ResearchResult
+from pm_workflow.agents.prd_writer import PRDAgent
 from pm_workflow.agents.researcher import Researcher
 from pm_workflow.config import Settings, get_settings
 from pm_workflow.notion import NotionClient
@@ -159,6 +160,89 @@ def run_breakdown_for_requirement(
         )
     except Exception as e:
         msg = f"拆解产出上传失败：{type(e).__name__}: {e}"
+        logger.exception(msg)
+        result.errors.append(msg)
+        try:
+            notion.update_requirement(req.page_id, failure_reason=msg)
+        except Exception as e2:
+            logger.warning("失败原因写回 Notion 又失败：%s", e2)
+
+    return result
+
+
+def run_prd_for_requirement(
+    req: Requirement,
+    *,
+    notion: NotionClient | None = None,
+    agent: PRDAgent | None = None,
+    settings: Settings | None = None,
+    upload_to_notion: bool = True,
+    research_markdown: str | None = None,
+    breakdown_markdown: str | None = None,
+) -> PRDResult:
+    """对单个需求跑 PRD 生成 + Critic 修订循环，含状态机 + Notion 回写。
+
+    状态机:
+      entry: 拆解中（或任意） → PRD生成中
+      success: prd.md 上传成子页面 + 回写需求表「PRD链接」 + 状态置「已完成」
+      fail: 状态置「失败」 + failure_reason 写回
+
+    前置：outputs/{req_id}/research.md + breakdown.md 必须存在（先跑过前两阶段）
+    """
+    settings = settings or get_settings()
+    notion = notion or NotionClient(settings=settings)
+    agent = agent or PRDAgent(settings=settings)
+
+    try:
+        notion.update_requirement(req.page_id, status=RequirementStatus.WRITING_PRD)
+    except Exception as e:
+        logger.warning("置「PRD生成中」状态失败（不阻塞，继续）：%s", e)
+
+    try:
+        result = agent.generate(
+            req,
+            research_markdown=research_markdown,
+            breakdown_markdown=breakdown_markdown,
+        )
+    except FileNotFoundError as e:
+        # 上游 research.md 或 breakdown.md 缺失
+        msg = f"PRD 前置依赖缺失：{e}"
+        logger.error(msg)
+        try:
+            notion.update_requirement(
+                req.page_id, status=RequirementStatus.FAILED, failure_reason=msg
+            )
+        except Exception as e2:
+            logger.warning("置「失败」状态又失败：%s", e2)
+        raise
+    except Exception as e:
+        msg = f"{type(e).__name__}: {e}"
+        logger.exception("PRD 生成崩溃：%s", msg)
+        try:
+            notion.update_requirement(
+                req.page_id, status=RequirementStatus.FAILED, failure_reason=msg
+            )
+        except Exception as e2:
+            logger.warning("置「失败」状态又失败：%s", e2)
+        raise
+
+    if not upload_to_notion:
+        return result
+
+    # 上传 prd.md 作为子页面 + 回写 URL + 状态置「已完成」
+    try:
+        page_info = notion.create_subpage_with_markdown(
+            parent_page_id=req.page_id,
+            title=f"PRD - {req.name}",
+            markdown=result.prd_markdown,
+        )
+        notion.update_requirement(
+            req.page_id,
+            prd_url=page_info["url"],
+            status=RequirementStatus.DONE,
+        )
+    except Exception as e:
+        msg = f"PRD 产出上传失败：{type(e).__name__}: {e}"
         logger.exception(msg)
         result.errors.append(msg)
         try:
