@@ -13,8 +13,10 @@ WORKDIR /app
 
 # 先复制依赖声明，利用 Docker 层缓存
 COPY pyproject.toml ./
+# 装 [dev] extras 一并把 pytest/ruff 进镜像，方便容器内跑测试/lint
+# 生产部署可改为 `pip install --no-cache-dir -e .` 去掉 dev 依赖瘦身
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -e .
+    pip install --no-cache-dir -e ".[dev]"
 
 # 安装 Playwright chromium + 其运行所需的系统依赖（一次 ~150MB）
 # 用 --with-deps 让 playwright 自动解决 libnss3/libatk 等繁琐依赖

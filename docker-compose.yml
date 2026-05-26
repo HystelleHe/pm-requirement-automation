@@ -86,6 +86,7 @@ services:
     volumes:
       # 容器内 /app 跟项目 service/ 同步，便于开发热改（生产部署应去掉 source mount，用镜像里的代码）
       - ./service/pm_workflow:/app/pm_workflow
+      - ./service/tests:/app/tests          # 在容器内跑 pytest 用
       - ./skill-library:/app/skill-library
       - ./outputs:/app/outputs
     depends_on:
