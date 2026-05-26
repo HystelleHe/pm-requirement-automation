@@ -7,12 +7,19 @@
 
 ## ⚡ Next Step（下次回到项目先看这里）
 
-**当前状态**：✅ **Phase 0 + 1 + 2 全部完成** — 一个真实需求可以从 Notion 触发跑完整调研产出 research.md 并回写 Notion
+**当前状态**：✅ **Phase 0 + 1 + 2 + 3 全部完成** — 调研 + 拆解 两阶段串通，单需求 ~2.5 分钟从场景到结构化用户故事
 
 **下一步动作**：
-1. ⏳ 进入 Phase 3（需求拆解 Agent）— 输入调研结果 + 拆解 Prompt → 用户故事 + 优先级
-2. （可选）接 Langfuse trace（去 http://localhost:3000 注册建 project，把 PUBLIC/SECRET KEY 写入 `.env`，所有 LLM 调用自动可观测）
-3. （Backlog）Playwright 登录站爬虫 —— Phase 2 MVP 用 Tavily search 已够，登录站留到调研质量瓶颈时再补
+1. ⏳ 进入 Phase 4（PRD Agent + Critic）— 综合 research + breakdown → PRD，含 Kimi 写 + GLM 跨家 Critic 修订循环
+2. （可选）接 Langfuse trace 看 LLM 调用全链路
+3. （Backlog）Playwright 登录站爬虫；Notion 子页面去重（每次跑都创建新 page）
+
+**Phase 3 已完成**（2026-05-26）：
+- ✅ 3 个 commit：拆解 skill / BreakdownAgent + orchestrator / API+CLI+E2E
+- ✅ `POST /breakdown` + `pm-workflow breakdown` 等价入口
+- ✅ orchestrator 状态机：调研中→拆解中→（成功保留拆解中等 Phase 4 接力 / 失败置失败+原因）
+- ✅ 端到端实测：示例需求 ~1 分钟拆解，11 用户故事（含完整 P0-P2 + Out-of-Scope + 开放问题），5074 tokens
+- ✅ 中途修复了 skill prompt 中 schema 未注入的 bug（直接嵌 JSON 示例到 system prompt 解决）
 
 **Phase 2 已完成**（2026-05-26）：
 - ✅ 5 个 commit：Tavily 客户端 / Playwright 公开抓取 / 调研 Agent / Notion 回写 / API+CLI
@@ -56,9 +63,9 @@
   - [x] Kimi-K2-Thinking 结构化总结（research_synthesis skill）
   - [x] 产出写到 `outputs/{req_id}/research.md` + Notion 子页面 + 回写需求表「调研报告链接」
 
-- [ ] **Phase 3 - 需求拆解 Agent（1 天）**
-  - [ ] 读取调研结果 + 拆解 Prompt → 用户故事 + 优先级
-  - [ ] 产出写到 `outputs/{req_id}/breakdown.md`
+- [x] **Phase 3 - 需求拆解 Agent（1 天）**
+  - [x] 读取 outputs/{req_id}/research.md + requirement_breakdown skill → JSON 用户故事 + 优先级
+  - [x] 渲染 breakdown.md（按 P0/P1/P2 分组 + 验收标准 + out_of_scope + open_questions）+ 上传 Notion
 
 - [ ] **Phase 4 - PRD Agent + Critic（2 天）**
   - [ ] 分章节生成 PRD（背景/目标/用户故事/功能/非功能）

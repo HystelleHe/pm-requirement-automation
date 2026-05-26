@@ -146,6 +146,64 @@ def research(page_id: str | None, max_competitors: int, no_notion: bool):
         console.print("  请去 Notion 需求行查看「调研报告链接」字段")
 
 
+@cli.command()
+@click.option("--page-id", default=None, help="需求行的 Notion page UUID（不填则取第一个有 research.md 的需求）")
+@click.option("--no-notion", is_flag=True, help="仅本地落盘，不上传 Notion")
+def breakdown(page_id: str | None, no_notion: bool):
+    """对单个需求跑拆解流程（前置：先跑过 research）。"""
+    from pm_workflow.agents.orchestrator import run_breakdown_for_requirement
+    from pm_workflow.config import get_settings
+    from pm_workflow.notion import NotionClient
+
+    settings = get_settings()
+    notion = NotionClient()
+    all_reqs = notion.query_requirements(status=None)
+
+    if page_id:
+        target = next((r for r in all_reqs if r.page_id == page_id), None)
+        if not target:
+            console.print(f"[red]未找到需求 page_id={page_id}[/red]")
+            raise SystemExit(1)
+    else:
+        # 找第一个本地有 research.md 的需求
+        target = None
+        for r in all_reqs:
+            rid = r.req_id or f"req-{r.page_id[:8]}"
+            if (settings.outputs_dir / rid / "research.md").exists():
+                target = r
+                break
+        if not target:
+            console.print("[yellow]没有需求具备 outputs/.../research.md，请先跑 research[/yellow]")
+            raise SystemExit(0)
+
+    console.print(f"[bold]开始拆解：[/bold] {target.name}  ({target.page_id[:13]}...)")
+    try:
+        result = run_breakdown_for_requirement(
+            target, notion=notion, upload_to_notion=not no_notion
+        )
+    except FileNotFoundError as e:
+        console.print(f"[red]前置依赖缺失[/red]：{e}")
+        raise SystemExit(2)
+
+    console.print(f"[green]✔[/green] 拆解完成")
+    console.print(f"  req_id      : {result.req_id}")
+    console.print(f"  用户故事    : {len(result.user_stories)} 条")
+    by_prio: dict[str, int] = {}
+    for s in result.user_stories:
+        by_prio[s.priority] = by_prio.get(s.priority, 0) + 1
+    for p in ("P0", "P1", "P2"):
+        if p in by_prio:
+            console.print(f"    {p}: {by_prio[p]} 条")
+    console.print(f"  Out of Scope: {len(result.out_of_scope)} 条")
+    console.print(f"  开放问题    : {len(result.open_questions)} 条")
+    console.print(f"  本地文件    : {result.output_path}")
+    console.print(f"  token 用量  : {result.llm_usage.get('total_tokens', 0)}")
+    if result.errors:
+        console.print(f"  [yellow]非致命错误[/yellow]：{result.errors}")
+    if not no_notion:
+        console.print("  请去 Notion 需求行查看「需求拆解链接」字段")
+
+
 @cli.command(name="skills-list")
 @click.option("--pipeline", default=None, help="按适用管线过滤，如 竞品调研/PRD/Figma")
 @click.option("--all", "show_all", is_flag=True, help="包含非 Active 状态")

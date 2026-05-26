@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 from pm_workflow.scrapers.tavily import TavilyResult
@@ -29,3 +31,35 @@ class ResearchResult(BaseModel):
     output_path: str = ""  # 落盘后的本地路径
     llm_usage: dict = Field(default_factory=dict)  # 累计 token 用量（成本核算）
     errors: list[str] = Field(default_factory=list)  # 非致命错误集合
+
+
+# ===================================================================
+# Phase 3: 需求拆解
+# ===================================================================
+
+
+Priority = Literal["P0", "P1", "P2"]
+
+
+class UserStory(BaseModel):
+    """单条用户故事 + 优先级 + 验收标准。"""
+
+    story: str  # "作为 ... 我希望 ... 以便 ..."
+    priority: Priority = "P1"
+    rationale: str = ""  # 为什么是这个优先级
+    acceptance_criteria: list[str] = Field(default_factory=list)
+
+
+class BreakdownResult(BaseModel):
+    """拆解 agent 的输出。"""
+
+    req_id: str
+    req_page_id: str
+    requirement_name: str
+    user_stories: list[UserStory]
+    out_of_scope: list[str] = Field(default_factory=list)
+    open_questions: list[str] = Field(default_factory=list)
+    breakdown_markdown: str = ""  # 渲染好的 breakdown.md 内容
+    output_path: str = ""
+    llm_usage: dict = Field(default_factory=dict)
+    errors: list[str] = Field(default_factory=list)

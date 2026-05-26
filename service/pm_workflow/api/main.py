@@ -19,6 +19,7 @@ from fastapi import FastAPI, Query
 
 from pm_workflow import __version__
 from pm_workflow.agents.skill_sync import SkillSyncer
+from pm_workflow.api.breakdown import router as breakdown_router
 from pm_workflow.api.research import router as research_router
 from pm_workflow.config import get_settings
 from pm_workflow.notion import NotionClient, SkillStatus
@@ -51,6 +52,7 @@ app = FastAPI(
 
 # 各 phase 的业务路由
 app.include_router(research_router)
+app.include_router(breakdown_router)
 
 
 @app.get("/health")
