@@ -1,0 +1,61 @@
+[project]
+name = "pm-workflow"
+version = "0.1.0"
+description = "PM 需求自动化系统 - 能力层（FastAPI 服务）"
+requires-python = ">=3.12"
+dependencies = [
+    # Web 框架
+    "fastapi>=0.115,<1.0",
+    "uvicorn[standard]>=0.32,<1.0",
+    # 配置
+    "pydantic>=2.9,<3.0",
+    "pydantic-settings>=2.6,<3.0",
+    "python-dotenv>=1.0,<2.0",
+    # LLM 客户端（通过 OpenAI SDK 调 modelverse OpenAI 兼容接口）
+    "openai>=1.55,<2.0",
+    # HTTP 客户端（直接调 Tavily / 其它 REST）
+    "httpx>=0.27,<1.0",
+    # Notion 官方 Python SDK
+    "notion-client>=2.2,<3.0",
+    # Tavily 搜索 SDK
+    "tavily-python>=0.5,<1.0",
+    # Skill Library 同步：md frontmatter 解析
+    "python-frontmatter>=1.1,<2.0",
+    # LLM 观测
+    "langfuse>=2.50,<3.0",
+    # CLI 框架
+    "click>=8.1,<9.0",
+    "rich>=13.7,<14.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3,<9.0",
+    "pytest-asyncio>=0.24,<1.0",
+    "pytest-cov>=6.0,<7.0",
+    "ruff>=0.7,<1.0",
+]
+
+[project.scripts]
+pm-workflow = "pm_workflow.cli:cli"
+
+[build-system]
+requires = ["setuptools>=70", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pm_workflow*"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["E501"]  # line-too-long 已由 formatter 控制
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+addopts = "-ra -q"
