@@ -23,6 +23,7 @@ from pm_workflow.notion.markdown import markdown_to_notion_blocks
 from pm_workflow.notion.models import (
     Requirement,
     RequirementStatus,
+    RequirementType,
     Skill,
     SkillStatus,
 )
@@ -135,6 +136,12 @@ class NotionClient:
             status = RequirementStatus(status_str) if status_str else RequirementStatus.PENDING
         except ValueError:
             status = RequirementStatus.PENDING
+        # 需求类型：人工选，空值 fallback Build（向后兼容存量 3 条数据）
+        type_str = _select(p.get("需求类型", {}))
+        try:
+            req_type = RequirementType(type_str) if type_str else RequirementType.BUILD
+        except ValueError:
+            req_type = RequirementType.BUILD
         return Requirement(
             page_id=row["id"],
             name=_title(p.get("需求名称", {})),
@@ -142,9 +149,11 @@ class NotionClient:
             competitors=_multi_select(p.get("指定竞品", {})),
             keywords=_rich_text(p.get("自动发现关键词", {})),
             status=status,
+            type=req_type,
             research_url=_url(p.get("调研报告链接", {})),
             breakdown_url=_url(p.get("需求拆解链接", {})),
             prd_url=_url(p.get("PRD链接", {})),
+            insight_url=_url(p.get("洞察备忘录链接", {})),
             failure_reason=_rich_text(p.get("失败原因", {})),
             req_id=_rich_text(p.get("req_id", {})),
         )
@@ -158,6 +167,7 @@ class NotionClient:
         research_url: str | None = None,
         breakdown_url: str | None = None,
         prd_url: str | None = None,
+        insight_url: str | None = None,
         failure_reason: str | None = None,
         req_id: str | None = None,
     ) -> None:
@@ -174,6 +184,8 @@ class NotionClient:
             props["需求拆解链接"] = {"url": breakdown_url or None}
         if prd_url is not None:
             props["PRD链接"] = {"url": prd_url or None}
+        if insight_url is not None:
+            props["洞察备忘录链接"] = {"url": insight_url or None}
         if failure_reason is not None:
             props["失败原因"] = {"rich_text": _to_rich_text(failure_reason)}
         if req_id is not None:

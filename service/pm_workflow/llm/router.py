@@ -30,6 +30,7 @@ class LLMTask(str, Enum):
     PRD_CRITIC = "prd_critic"
     EVAL_JUDGE = "eval_judge"
     RESEARCH_SYNTHESIS = "research_synthesis"  # 调研结果整合写 research.md
+    INSIGHT_MEMO = "insight_memo"  # Discover 路径：research.md → Insight Memo
 
 
 class ChatResponse(BaseModel):

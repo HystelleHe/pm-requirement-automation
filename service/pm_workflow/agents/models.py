@@ -106,3 +106,40 @@ class PRDResult(BaseModel):
     output_path: str = ""
     llm_usage: dict = Field(default_factory=dict)  # 累计 token
     errors: list[str] = Field(default_factory=list)
+
+
+# ===================================================================
+# Phase 6.5: Discover 路径 —— Insight Memo
+# ===================================================================
+
+
+class KeyInsight(BaseModel):
+    """单条核心洞察（title + evidence + so_what 三段式）。"""
+
+    title: str
+    evidence: str = ""  # 来自 research 的支撑事实
+    so_what: str = ""  # 对业务/产品的含义
+
+
+class Opportunity(BaseModel):
+    """单个机会点（title + rationale）。"""
+
+    title: str
+    rationale: str = ""
+
+
+class InsightMemoResult(BaseModel):
+    """Insight Memo agent 的输出（Discover 路径终端产物）。"""
+
+    req_id: str
+    req_page_id: str
+    requirement_name: str
+    key_insights: list[KeyInsight] = Field(default_factory=list)
+    trends: list[str] = Field(default_factory=list)
+    opportunities: list[Opportunity] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+    open_questions: list[str] = Field(default_factory=list)
+    insight_markdown: str = ""  # 渲染好的 insight_memo.md
+    output_path: str = ""
+    llm_usage: dict = Field(default_factory=dict)
+    errors: list[str] = Field(default_factory=list)

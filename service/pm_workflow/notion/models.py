@@ -24,8 +24,16 @@ class RequirementStatus(str, Enum):
     RESEARCHING = "调研中"
     BREAKING_DOWN = "拆解中"
     WRITING_PRD = "PRD生成中"
+    GENERATING_INSIGHT = "洞察生成中"  # Discover 路径专用
     DONE = "已完成"
     FAILED = "失败"
+
+
+class RequirementType(str, Enum):
+    """需求类型 —— 人工选；决定走哪条路径。"""
+
+    BUILD = "Build"  # 功能需求 → research → breakdown → PRD
+    DISCOVER = "Discover"  # 探索调研 → research → insight_memo
 
 
 class Requirement(BaseModel):
@@ -37,9 +45,11 @@ class Requirement(BaseModel):
     competitors: list[str] = Field(default_factory=list)  # 指定竞品 multi_select
     keywords: str = ""  # 自动发现关键词（由 agent 填回）
     status: RequirementStatus = RequirementStatus.PENDING
+    type: RequirementType = RequirementType.BUILD  # 空值 fallback Build（向后兼容）
     research_url: str | None = None  # 调研报告链接
     breakdown_url: str | None = None  # 需求拆解链接
     prd_url: str | None = None  # PRD 链接
+    insight_url: str | None = None  # 洞察备忘录链接（Discover 路径）
     failure_reason: str = ""  # 失败原因
     req_id: str = ""  # 对应 outputs/{req_id}/
     created_time: datetime | None = None

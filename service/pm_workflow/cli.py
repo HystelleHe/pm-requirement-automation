@@ -268,6 +268,65 @@ def prd(page_id: str | None, no_notion: bool):
         console.print("  请去 Notion 需求行查看「PRD链接」字段，状态应为「已完成」")
 
 
+@cli.command()
+@click.option("--page-id", default=None, help="需求行的 Notion page UUID（不填则取第一个 Discover 类型 + 有 research.md 的需求）")
+@click.option("--no-notion", is_flag=True, help="仅本地落盘，不上传 Notion")
+def insight(page_id: str | None, no_notion: bool):
+    """对 Discover 类型需求生成 Insight Memo（前置：先跑过 research）。"""
+    from pm_workflow.agents.orchestrator import run_insight_memo_for_requirement
+    from pm_workflow.config import get_settings
+    from pm_workflow.notion import NotionClient
+    from pm_workflow.notion.models import RequirementType
+
+    settings = get_settings()
+    notion = NotionClient()
+    all_reqs = notion.query_requirements(status=None)
+
+    if page_id:
+        target = next((r for r in all_reqs if r.page_id == page_id), None)
+        if not target:
+            console.print(f"[red]未找到需求 page_id={page_id}[/red]")
+            raise SystemExit(1)
+    else:
+        target = None
+        for r in all_reqs:
+            if r.type != RequirementType.DISCOVER:
+                continue
+            rid = r.req_id or f"req-{r.page_id[:8]}"
+            if (settings.outputs_dir / rid / "research.md").exists():
+                target = r
+                break
+        if not target:
+            console.print(
+                "[yellow]没有 Discover 类型 + 已有 research.md 的需求，请先把需求类型改为 Discover 并跑 research[/yellow]"
+            )
+            raise SystemExit(0)
+
+    console.print(f"[bold]开始生成 Insight Memo：[/bold] {target.name}  ({target.page_id[:13]}...)")
+    console.print(f"  需求类型：{target.type.value}")
+    try:
+        result = run_insight_memo_for_requirement(
+            target, notion=notion, upload_to_notion=not no_notion
+        )
+    except FileNotFoundError as e:
+        console.print(f"[red]前置依赖缺失[/red]：{e}")
+        raise SystemExit(2)
+
+    console.print(f"[green]✔[/green] Insight Memo 完成")
+    console.print(f"  req_id      : {result.req_id}")
+    console.print(f"  核心洞察    : {len(result.key_insights)} 条")
+    console.print(f"  趋势线      : {len(result.trends)} 条")
+    console.print(f"  机会点      : {len(result.opportunities)} 条")
+    console.print(f"  风险        : {len(result.risks)} 条")
+    console.print(f"  开放问题    : {len(result.open_questions)} 条")
+    console.print(f"  本地文件    : {result.output_path}")
+    console.print(f"  token 用量  : {result.llm_usage.get('total_tokens', 0)}")
+    if result.errors:
+        console.print(f"  [yellow]非致命错误[/yellow]：{result.errors}")
+    if not no_notion:
+        console.print("  请去 Notion 需求行查看「洞察备忘录链接」字段，状态应为「已完成」")
+
+
 @cli.command(name="skills-list")
 @click.option("--pipeline", default=None, help="按适用管线过滤，如 竞品调研/PRD/Figma")
 @click.option("--all", "show_all", is_flag=True, help="包含非 Active 状态")

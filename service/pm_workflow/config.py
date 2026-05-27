@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     llm_model_research_synthesis: str = Field(
         default="moonshotai/Kimi-K2-Thinking", alias="LLM_MODEL_RESEARCH_SYNTHESIS"
     )
+    llm_model_insight_memo: str = Field(
+        default="moonshotai/Kimi-K2-Thinking", alias="LLM_MODEL_INSIGHT_MEMO"
+    )
 
     # === Notion ===
     notion_api_key: str = Field(default="", alias="NOTION_API_KEY")

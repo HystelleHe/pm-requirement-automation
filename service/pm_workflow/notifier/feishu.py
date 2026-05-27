@@ -20,7 +20,7 @@ from pm_workflow.config import Settings, get_settings
 logger = logging.getLogger(__name__)
 
 
-Stage = Literal["research", "breakdown", "prd"]
+Stage = Literal["research", "breakdown", "prd", "insight"]
 Outcome = Literal["success", "failure"]
 
 
