@@ -208,7 +208,7 @@ pm-workflow/
 
 ## 📊 Notion 数据库 schema（4 个库）
 
-> 4 个数据库**已建好**，ID 在 `.env`。下面记录每个库的实际 schema，作为开发参考。父页面 ID：`NOTION_PARENT_PAGE_ID` = `36c0820f-9dba-80cd-8d80-c2583a6db942`。
+> 4 个数据库 ID 在 `.env` 配置（`NOTION_DB_*`）。下面记录每个库的实际 schema，作为开发参考。父页面 ID 由 `NOTION_PARENT_PAGE_ID` 指定（建库脚本时用，运行时不读）。
 
 **A. PM 需求表（触发源）** — `NOTION_DB_REQUIREMENTS`
 - 需求名称(Title) / 场景描述(Text) / 指定竞品(Multi-select) / 自动发现关键词(Text)

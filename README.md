@@ -1,7 +1,9 @@
-# PM 需求自动化系统（workflow）
+# PM 需求自动化系统
 
-> Notion 触发 → 自动完成「**竞品调研 + 需求拆解 + PRD 撰写**」三阶段产出
-> 详细计划见 [ROADMAP.md](./ROADMAP.md)
+> Notion 需求表新增一行 → 自动完成「**竞品调研 + 需求拆解 + PRD 撰写**」三阶段产出，PRD 走跨家 LLM Critic 审校循环。
+>
+> 📖 **拿到代码想跑起来 / 日常使用 / 异常处理 → 直接看 [USAGE.md](./USAGE.md)**
+> 🏗️ 架构 / 路线图 / Phase 决策记录 → [ROADMAP.md](./ROADMAP.md)
 
 ---
 
@@ -20,66 +22,34 @@ Notion 需求表 → n8n（编排）→ FastAPI 服务（能力层）→ Notion 
 
 ## 快速启动
 
-### 1. 准备环境
+完整建库 + 部署步骤见 [USAGE.md](./USAGE.md)。三件事：
 
 ```bash
-# 复制环境变量模板
-cp .env.example .env
-# 编辑 .env 填入所有 API Key 和 Notion DB ID
-```
+# 1. 配置环境变量
+cp .env.example .env  # 填入 LLM / Tavily / Notion 凭据
 
-需要准备的 API Key：
-- Anthropic（Claude）/ OpenAI（GPT-4）/ Perplexity / DeepSeek / Tavily
-- Notion Internal Integration Token
-
-需要在 Notion 建的 4 个数据库（schema 见 ROADMAP.md「📊 Notion 数据库 schema」）：
-- 需求表 / Skill Library / 调研结果缓存 / Eval 数据集
-
-### 2. 启动容器
-
-```bash
+# 2. 启动 5 个容器
 docker compose up -d
-docker compose ps   # 检查所有容器健康
+
+# 3. 激活 n8n workflow
+docker exec pm_n8n n8n import:workflow --input=/workflows/main.json
+# 浏览器开 http://localhost:5678 切 Active，再 docker compose restart n8n
 ```
 
-### 3. 访问入口
+### 服务入口
 
-| 服务 | 地址 | 默认凭据 |
+| 服务 | 地址 | 凭据 |
 |---|---|---|
-| n8n | http://localhost:5678 | 见 `.env` 的 `N8N_BASIC_AUTH_*` |
-| Langfuse | http://localhost:3000 | 首次访问注册即可 |
-| Qdrant | http://localhost:6333/dashboard | 无认证 |
-| Service API（Phase 1 后启用） | http://localhost:8000/docs | 无认证 |
+| n8n（编排） | http://localhost:5678 | `.env` 的 `N8N_BASIC_AUTH_*` |
+| Langfuse（LLM 观测） | http://localhost:3000 | 首次访问注册 |
+| Qdrant（向量库） | http://localhost:6333/dashboard | 无 |
+| Service API | http://localhost:8000/docs | 无 |
 
 ---
 
-## 日常运维（脱离 Claude 后怎么搞）
+## 日常运维 / 异常处理 / 改 Prompt / 迁移
 
-- **看错误**：n8n UI 执行历史 + Notion 需求表「失败原因」字段
-- **看成本**：Langfuse Dashboard
-- **看产出**：`outputs/{req_id}/` 目录或 Notion URL 跳转
-- **改 Prompt**：改 `skill-library/xxx.md` → 重启 service 自动同步到 Notion → 跑 eval 防回归
-- **加新爬虫**：在 `service/pm_workflow/scrapers/` 加文件，继承 `base.py`
-- **加新阶段**：`agents/` 新增 → FastAPI 路由注册 → n8n 加 HTTP 节点
-
----
-
-## 迁移到新机器
-
-1. 拷贝整个项目目录
-2. `cp .env.example .env` 填值
-3. 新环境 Notion 建 4 个库（schema 见 ROADMAP.md）
-4. `docker compose up -d`
-
----
-
-## 完全弃用 n8n
-
-能力层是独立 FastAPI 服务，可任意替换编排方式：
-- cron 调 CLI：`*/30 * * * * docker compose exec service python -m pm_workflow.cli scan-new-requirements`
-- GitHub Actions 触发
-- 包装成 Slack/飞书机器人
-- 直接 `curl localhost:8000/...`
+→ **全部在 [USAGE.md](./USAGE.md)** 第四、五、八节
 
 ---
 
@@ -119,6 +89,8 @@ workflow/
 
 ---
 
-## License & 责任
+## License
 
-仅供内部使用，所有 API Key 严禁入 git。
+MIT — 见 [LICENSE](./LICENSE)。
+
+⚠️ 所有 API Key 严禁入 git。`.env` 已在 `.gitignore` 内，请勿强制 add。
