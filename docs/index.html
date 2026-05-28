@@ -9,19 +9,17 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
       --ink:    #111827;
       --sub:    #6B7280;
       --line:   #E5E7EB;
       --bg:     #F9FAFB;
       --white:  #FFFFFF;
-      --a:      #6366F1; /* 本地化 */
-      --b:      #0EA5E9; /* 资产化 */
-      --c:      #10B981; /* 可迁移 */
+      --a:      #6366F1;
+      --b:      #0EA5E9;
+      --c:      #10B981;
       --shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
     }
-
     html { scroll-behavior: smooth; }
     body {
       font-family: 'Inter', -apple-system, sans-serif;
@@ -43,7 +41,7 @@
       font-weight: 600;
       letter-spacing: .12em;
       text-transform: uppercase;
-      color: #6366F1;
+      color: #818CF8;
       margin-bottom: 20px;
     }
     .hero h1 {
@@ -51,15 +49,15 @@
       font-weight: 700;
       letter-spacing: -.025em;
       line-height: 1.12;
-      margin-bottom: 18px;
+      margin-bottom: 20px;
     }
     .hero-sub {
       font-size: clamp(14px, 2vw, 17px);
       color: #9CA3AF;
-      max-width: 580px;
+      max-width: 540px;
       margin: 0 auto 44px;
       font-weight: 300;
-      line-height: 1.7;
+      line-height: 1.8;
     }
     .hero-pills {
       display: flex;
@@ -68,10 +66,7 @@
       flex-wrap: wrap;
     }
     .hero-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 8px 16px;
+      padding: 8px 18px;
       border-radius: 999px;
       font-size: 13px;
       font-weight: 500;
@@ -81,10 +76,10 @@
     .pill-b { border-color: #0EA5E9; color: #38BDF8; }
     .pill-c { border-color: #10B981; color: #34D399; }
 
-    /* ─── Section base ─── */
+    /* ─── Sections ─── */
     section { padding: 88px 24px; }
     section:nth-child(even) { background: var(--bg); }
-    .inner { max-width: 920px; margin: 0 auto; }
+    .inner { max-width: 900px; margin: 0 auto; }
     .eyebrow {
       font-size: 11px;
       font-weight: 600;
@@ -96,34 +91,31 @@
       font-size: clamp(22px, 3vw, 34px);
       font-weight: 700;
       letter-spacing: -.02em;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       line-height: 1.2;
     }
     .sec-sub {
       font-size: 15px;
       color: var(--sub);
-      max-width: 560px;
+      max-width: 580px;
       margin-bottom: 52px;
-      line-height: 1.7;
+      line-height: 1.75;
     }
 
     /* ─── Principle cards ─── */
-    .principle-list { display: flex; flex-direction: column; gap: 24px; }
+    .principle-list { display: flex; flex-direction: column; gap: 20px; }
     .principle-card {
       display: grid;
-      grid-template-columns: 260px 1fr;
-      gap: 0;
+      grid-template-columns: 220px 1fr;
       border: 1.5px solid var(--line);
       border-radius: 16px;
       overflow: hidden;
       background: var(--white);
       box-shadow: var(--shadow);
     }
-    @media (max-width: 680px) {
-      .principle-card { grid-template-columns: 1fr; }
-    }
+    @media (max-width: 640px) { .principle-card { grid-template-columns: 1fr; } }
     .principle-left {
-      padding: 36px 32px;
+      padding: 36px 28px;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -131,115 +123,26 @@
     .card-a .principle-left { background: linear-gradient(135deg,#EEF2FF,#E0E7FF); border-right: 1.5px solid #C7D2FE; }
     .card-b .principle-left { background: linear-gradient(135deg,#E0F2FE,#BAE6FD); border-right: 1.5px solid #7DD3FC; }
     .card-c .principle-left { background: linear-gradient(135deg,#ECFDF5,#D1FAE5); border-right: 1.5px solid #6EE7B7; }
-    .principle-num {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      margin-bottom: 10px;
-    }
+    .principle-num { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 10px; }
     .card-a .principle-num { color: var(--a); }
     .card-b .principle-num { color: #0369A1; }
     .card-c .principle-num { color: #065F46; }
-    .principle-name {
-      font-size: 28px;
-      font-weight: 700;
-      letter-spacing: -.02em;
-      margin-bottom: 8px;
-    }
+    .principle-name { font-size: 26px; font-weight: 700; letter-spacing: -.02em; margin-bottom: 6px; }
     .card-a .principle-name { color: #3730A3; }
     .card-b .principle-name { color: #0369A1; }
     .card-c .principle-name { color: #065F46; }
-    .principle-tagline { font-size: 13px; color: var(--sub); line-height: 1.6; }
+    .principle-tagline { font-size: 12.5px; color: var(--sub); line-height: 1.6; }
     .principle-right { padding: 32px 36px; }
-    .principle-right .what {
-      font-size: 13px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      color: var(--sub);
-      margin-bottom: 6px;
-      margin-top: 18px;
-    }
-    .principle-right .what:first-child { margin-top: 0; }
-    .principle-right p { font-size: 14px; color: var(--ink); line-height: 1.75; margin-bottom: 4px; }
-    .principle-right ul { list-style: none; padding: 0; }
-    .principle-right ul li {
-      font-size: 13.5px;
+    .principle-right p {
+      font-size: 14.5px;
       color: var(--ink);
-      padding: 5px 0;
-      padding-left: 16px;
-      position: relative;
-      line-height: 1.6;
+      line-height: 1.8;
+      margin-bottom: 14px;
     }
-    .principle-right ul li::before {
-      content: '—';
-      position: absolute;
-      left: 0;
-      color: var(--sub);
-      font-size: 11px;
-      top: 7px;
-    }
+    .principle-right p:last-child { margin-bottom: 0; }
+    .principle-right strong { font-weight: 600; }
 
-    /* ─── Framework ─── */
-    .steps { display: flex; flex-direction: column; gap: 0; }
-    .step-row {
-      display: flex;
-      gap: 0;
-      align-items: stretch;
-    }
-    .step-connector {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 56px;
-      flex-shrink: 0;
-    }
-    .step-dot-outer {
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      background: #EEF2FF;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--a);
-      flex-shrink: 0;
-      margin-top: 16px;
-    }
-    .step-line {
-      width: 2px;
-      flex: 1;
-      background: var(--line);
-      margin: 6px 0;
-    }
-    .step-row:last-child .step-line { display: none; }
-    .step-body {
-      flex: 1;
-      background: var(--white);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 20px 24px;
-      margin-bottom: 12px;
-      box-shadow: var(--shadow);
-    }
-    .step-body h4 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-    .step-body p { font-size: 13.5px; color: var(--sub); line-height: 1.65; }
-    .step-body .step-note {
-      display: inline-block;
-      font-size: 11.5px;
-      font-weight: 500;
-      padding: 3px 8px;
-      border-radius: 5px;
-      margin-top: 8px;
-    }
-    .note-a { background: #EEF2FF; color: var(--a); }
-    .note-b { background: #E0F2FE; color: #0369A1; }
-    .note-c { background: #ECFDF5; color: #065F46; }
-
-    /* ─── Case study ─── */
+    /* ─── Pipeline ─── */
     .pipeline {
       display: flex;
       align-items: center;
@@ -264,34 +167,18 @@
     .parr { flex-shrink: 0; width: 28px; text-align: center; color: var(--sub); }
     .pbranch { display: flex; flex-direction: column; gap: 8px; }
     .prow { display: flex; align-items: center; gap: 0; }
-    .btag {
-      font-size: 10px; font-weight: 700; letter-spacing: .06em;
-      padding: 2px 7px; border-radius: 4px; margin-right: 6px; flex-shrink: 0;
-    }
+    .btag { font-size: 10px; font-weight: 700; letter-spacing: .06em; padding: 2px 7px; border-radius: 4px; margin-right: 6px; flex-shrink: 0; }
     .btag-b { background: #EEF2FF; color: var(--a); }
     .btag-d { background: #ECFDF5; color: var(--c); }
 
-    .principle-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 9px;
-      border-radius: 999px;
-      margin: 3px 3px 0 0;
-    }
-    .ptag-a { background: #EEF2FF; color: var(--a); }
-    .ptag-b { background: #E0F2FE; color: #0369A1; }
-    .ptag-c { background: #ECFDF5; color: #065F46; }
-
-    .evidence-grid {
+    /* ─── Evidence grid ─── */
+    .ev-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin-top: 36px;
+      gap: 18px;
+      margin-top: 40px;
     }
-    @media (max-width: 640px) { .evidence-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) { .ev-grid { grid-template-columns: 1fr; } }
     .ev-card {
       background: var(--white);
       border: 1px solid var(--line);
@@ -300,9 +187,20 @@
       box-shadow: var(--shadow);
     }
     .ev-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
-    .ev-card p { font-size: 13px; color: var(--sub); line-height: 1.65; }
+    .ev-card p { font-size: 13.5px; color: var(--sub); line-height: 1.7; }
+    .ptag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 9px;
+      border-radius: 999px;
+      margin: 8px 3px 0 0;
+    }
+    .ptag-a { background: #EEF2FF; color: var(--a); }
+    .ptag-b { background: #E0F2FE; color: #0369A1; }
+    .ptag-c { background: #ECFDF5; color: #065F46; }
 
-    /* ─── Token chart ─── */
+    /* ─── Token ─── */
     .token-layout {
       display: grid;
       grid-template-columns: 1fr 300px;
@@ -326,11 +224,29 @@
       box-shadow: var(--shadow);
     }
     .ts-val { font-size: 26px; font-weight: 700; letter-spacing: -.02em; margin-bottom: 4px; }
-    .ts-label { font-size: 12px; color: var(--sub); }
+    .ts-label { font-size: 12px; color: var(--sub); line-height: 1.6; }
     .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 20px; margin-top: 6px; }
     .bg-g { background: #ECFDF5; color: var(--c); }
     .bg-i { background: #EEF2FF; color: var(--a); }
     .bg-y { background: #FFFBEB; color: #92400E; }
+
+    /* ─── More ideas ─── */
+    .ideas-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 640px) { .ideas-grid { grid-template-columns: 1fr; } }
+    .idea-card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+    .idea-card .icon { font-size: 22px; margin-bottom: 10px; }
+    .idea-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+    .idea-card p { font-size: 13px; color: var(--sub); line-height: 1.65; }
 
     /* ─── Footer ─── */
     footer {
@@ -347,105 +263,64 @@
 
 <!-- Hero -->
 <header class="hero">
-  <div class="hero-eyebrow">个人生产力 · Workflow 方法论</div>
-  <h1>个人 Workflow 通用思路</h1>
+  <div class="hero-eyebrow">Personal Workflow · 思路分享</div>
+  <h1>个人 Workflow<br>通用思路</h1>
   <p class="hero-sub">
-    用三个原则构建任何自动化工作流：<br>
-    把重复工作变成可持续运行、可积累、可迁移的个人资产
+    一直在想怎么把重复的工作变得更可持续。<br>
+    折腾下来，觉得有三件事比较重要。
   </p>
   <div class="hero-pills">
-    <span class="hero-pill pill-a">⬡ 本地化</span>
-    <span class="hero-pill pill-b">◈ 资产化</span>
-    <span class="hero-pill pill-c">⟳ 可迁移</span>
+    <span class="hero-pill pill-a">本地化</span>
+    <span class="hero-pill pill-b">资产化</span>
+    <span class="hero-pill pill-c">可迁移</span>
   </div>
 </header>
 
-<!-- 三个核心理念 -->
+<!-- 三个原则 -->
 <section id="principles">
   <div class="inner">
-    <div class="eyebrow" style="color:var(--a)">核心理念</div>
-    <h2 class="sec-title">三个原则，适用于所有 Workflow</h2>
-    <p class="sec-sub">这三条不是技术要求，而是在「做了再说」过程中反复被验证的判断标准。构建任何新 workflow 之前，先把这三条想清楚。</p>
+    <div class="eyebrow" style="color:var(--a)">三个想法</div>
+    <h2 class="sec-title">构建 Workflow 时反复回想的事</h2>
+    <p class="sec-sub">不是方法论，就是做了一段时间之后，觉得这三件事想清楚了会省很多麻烦。</p>
 
     <div class="principle-list">
 
-      <!-- 本地化 -->
       <div class="principle-card card-a">
         <div class="principle-left">
-          <div class="principle-num">原则 01</div>
+          <div class="principle-num">第一件事</div>
           <div class="principle-name">本地化</div>
-          <div class="principle-tagline">工具跑在自己的机器上<br>数据不离开本地</div>
+          <div class="principle-tagline">工具跑在自己机器上，<br>数据不离开本地</div>
         </div>
         <div class="principle-right">
-          <div class="what">是什么</div>
-          <p>核心工具（编排、观测、向量库）用 Docker 自建，运行在本机；API Key 在本地 .env 文件里，不上传任何 SaaS 平台。</p>
-          <div class="what">为什么重要</div>
-          <ul>
-            <li>SaaS 订阅有不确定性：涨价、关闭、断网都不影响你的工作流继续运行</li>
-            <li>数据主权在自己手里——调研报告、PRD 草稿、历史产出都落在本地磁盘</li>
-            <li>调试更方便：直接看 docker logs，不需要在云端 dashboard 里找原因</li>
-            <li>成本可控：只付 LLM API 调用费，不付平台托管费</li>
-          </ul>
-          <div class="what">怎么做</div>
-          <ul>
-            <li>n8n / Langfuse / Qdrant 全部 Docker 自建，一条 <code>docker compose up -d</code> 启动</li>
-            <li>所有凭据集中在 .env，加入 .gitignore，永远不入 git</li>
-            <li>产出目录（outputs/）也在本地，git 只管代码不管数据</li>
-          </ul>
+          <p>用 SaaS 工具很方便，但有一种隐患：哪天涨价了、服务关了，或者网断了，workflow 就停了。更烦的是，历史数据可能也跟着没了。</p>
+          <p>所以现在倾向于把能自建的都 Docker 跑在本地——n8n、Langfuse、Qdrant 都是这样。API Key 放在 .env 文件里，不经过任何第三方平台。调研报告、PRD 草稿也都落在本地磁盘，不只活在某个 SaaS 的数据库里。</p>
+          <p>这样至少有一个感觉：<strong>东西是自己的</strong>，不是租来的。</p>
         </div>
       </div>
 
-      <!-- 资产化 -->
       <div class="principle-card card-b">
         <div class="principle-left">
-          <div class="principle-num">原则 02</div>
+          <div class="principle-num">第二件事</div>
           <div class="principle-name">资产化</div>
-          <div class="principle-tagline">把重复工作中可复用的部分<br>显式管理起来</div>
+          <div class="principle-tagline">把可复用的部分<br>显式管理起来</div>
         </div>
         <div class="principle-right">
-          <div class="what">是什么</div>
-          <p>Prompt 不散在聊天框里，而是以文件的形式版本化管理；每次运行的产出落盘，可积累成 Eval 数据集；Skill Library 是跨 workflow 复用的提示词仓库。</p>
-          <div class="what">为什么重要</div>
-          <ul>
-            <li>Prompt 不版本化，改了就不知道哪版效果好，无法系统性迭代</li>
-            <li>每次手写调研报告 / PRD 都是沉没成本；跑出来的文档是「会增值的资产」</li>
-            <li>历史产出 + 人工评分 = 未来 Eval 数据集的原料，是质量护城河</li>
-            <li>Skill Library 建好后，新 workflow 复用已有 Prompt 而不是从零写</li>
-          </ul>
-          <div class="what">怎么做</div>
-          <ul>
-            <li>Prompt 以 .md 文件存在项目仓库里（skill-library/），git 版本管理</li>
-            <li>同一份 Prompt 同步到 Notion Skill Library 作为「可共享资产」</li>
-            <li>每次运行的产出自动落到 outputs/{req_id}/ 目录</li>
-            <li>建 Eval 数据库，把觉得「这条产出不错」的加入金标集</li>
-          </ul>
+          <p>以前写 Prompt 都是散在聊天窗口里，效果好的那条根本找不回来。改了一版又不知道哪版更好，完全没有积累感。</p>
+          <p>后来把 Prompt 全部改成 .md 文件放在项目仓库里，git 版本管理，改了就 commit。跑出来的调研报告、PRD 也都落到 <code style="background:#F3F4F6;padding:1px 5px;border-radius:4px;font-size:13px">outputs/</code> 目录，不扔掉。好的案例再加到 Eval 数据集里。</p>
+          <p>慢慢地，<strong>每次运行都在给下一次变好提供素材</strong>——有点像在攒利息，而不是每次都从零开始。</p>
         </div>
       </div>
 
-      <!-- 可迁移 -->
       <div class="principle-card card-c">
         <div class="principle-left">
-          <div class="principle-num">原则 03</div>
+          <div class="principle-num">第三件事</div>
           <div class="principle-name">可迁移</div>
-          <div class="principle-tagline">整套系统可以在任何环境<br>一键重建</div>
+          <div class="principle-tagline">整套东西换个环境<br>还能跑起来</div>
         </div>
         <div class="principle-right">
-          <div class="what">是什么</div>
-          <p>docker-compose.yml 是迁移单元，.env 是唯一需要填的配置；能力层（业务逻辑）和编排层（触发机制）分离，可以独立替换任何一侧。</p>
-          <div class="what">为什么重要</div>
-          <ul>
-            <li>换电脑、换服务器，不应该丢失工作——一份 compose 文件解决</li>
-            <li>今天用 n8n 触发，明天改成 cron/Slack Bot/GitHub Actions，业务逻辑不需要动</li>
-            <li>不被任何模型绑定——环境变量换个 LLM_MODEL 就能切换模型供应商</li>
-            <li>CLI 兜底：即使编排层全挂了，手动跑一条命令也能产出结果</li>
-          </ul>
-          <div class="what">怎么做</div>
-          <ul>
-            <li>能力层写成独立 FastAPI 服务，有 CLI 入口，不依赖编排层</li>
-            <li>编排层（n8n）只做触发 + HTTP 调用，不含任何业务逻辑</li>
-            <li>模型配置全通过环境变量注入，代码里不写死任何模型名</li>
-            <li>docker-compose.yml + .env.example + README = 完整交付物</li>
-          </ul>
+          <p>换电脑的时候，或者某个工具出问题的时候，最怕的就是「这套东西只能在那台机器 / 那个平台上跑」。</p>
+          <p>所以把业务逻辑全部写在独立的 FastAPI 服务里，n8n 只负责触发和 HTTP 调用——这样今天换成 cron、明天换成 Slack Bot，逻辑不用重写。模型配置全走环境变量，换个 LLM 供应商改一行 .env 就行。每个功能也有 CLI 命令兜底，不依赖任何编排工具也能跑。</p>
+          <p><strong>迁移单元是一份 docker-compose.yml 加一份 .env</strong>，拷过去就能起。</p>
         </div>
       </div>
 
@@ -453,64 +328,12 @@
   </div>
 </section>
 
-<!-- 通用构建框架 -->
-<section id="framework">
-  <div class="inner">
-    <div class="eyebrow" style="color:var(--b)">通用框架</div>
-    <h2 class="sec-title">基于这三条，怎么构建任何 Workflow</h2>
-    <p class="sec-sub">从识别重复工作，到可持续运行的自动化系统，一共五步</p>
-
-    <div class="steps">
-      <div class="step-row">
-        <div class="step-connector"><div class="step-dot-outer">1</div><div class="step-line"></div></div>
-        <div class="step-body">
-          <h4>识别「值得自动化」的重复工作</h4>
-          <p>不是所有重复工作都值得自动化。判断标准：频率 × 单次耗时 × 质量可标准化程度。竞品调研 + PRD 是高频、高耗时、且结构相对固定的任务，是好的切入点。反例：每次都高度个性化的战略决策，不适合自动化。</p>
-          <span class="step-note note-a">理念：资产化的起点是认清「哪些工作在重复」</span>
-        </div>
-      </div>
-      <div class="step-row">
-        <div class="step-connector"><div class="step-dot-outer">2</div><div class="step-line"></div></div>
-        <div class="step-body">
-          <h4>把「工作步骤」拆成独立能力</h4>
-          <p>手动工作时你怎么做的，流程图画出来。每个「步骤」对应一个 Agent 或函数，输入/输出接口定义清楚。拆得越细，后续替换单个环节越容易。竞品调研 → 需求拆解 → PRD 撰写是三个独立能力，每个可以单独跑、单独测、单独迭代。</p>
-          <span class="step-note note-c">理念：能力层独立 = 可迁移的基础</span>
-        </div>
-      </div>
-      <div class="step-row">
-        <div class="step-connector"><div class="step-dot-outer">3</div><div class="step-line"></div></div>
-        <div class="step-body">
-          <h4>把 Prompt 写成文件，加版本管理</h4>
-          <p>每个能力对应一个 skill .md 文件，包含 System Prompt + User Prompt 模板 + 输入变量声明。改 Prompt 就改文件，git commit 留记录，回滚靠 git checkout。不要把 Prompt 散在代码字符串里——改了就找不到上一版了。</p>
-          <span class="step-note note-b">理念：资产化 = Prompt 版本化</span>
-        </div>
-      </div>
-      <div class="step-row">
-        <div class="step-connector"><div class="step-dot-outer">4</div><div class="step-line"></div></div>
-        <div class="step-body">
-          <h4>用薄编排层串联，别把业务逻辑放进去</h4>
-          <p>n8n / cron / GitHub Actions 只负责：定时触发 → 调 HTTP 接口 → 传结果。业务判断（该走哪条路径？这次需不需要 Critic？）全在能力层决定。编排层越薄，替换成本越低；能力层越独立，测试越方便。</p>
-          <span class="step-note note-c">理念：可迁移 = 编排层和能力层解耦</span>
-        </div>
-      </div>
-      <div class="step-row">
-        <div class="step-connector"><div class="step-dot-outer">5</div><div class="step-line"></div></div>
-        <div class="step-body">
-          <h4>Docker 化，落盘产出，补 CLI 兜底</h4>
-          <p>docker-compose.yml 把所有服务打包，.env.example 是给未来的自己写的说明书。产出自动存到本地目录。每个核心功能补一个 CLI 命令——这不是「备用」，而是「最快的调试方式」和「编排层挂了时的救命绳」。</p>
-          <span class="step-note note-a">理念：本地化 + 可迁移 的落地形式</span>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- 案例：PM 需求自动化 -->
+<!-- 案例 -->
 <section id="case">
   <div class="inner">
-    <div class="eyebrow" style="color:var(--c)">案例验证</div>
-    <h2 class="sec-title">PM 需求自动化：三个原则的实践</h2>
-    <p class="sec-sub">这是用上述思路构建的第一个 workflow。Notion 一行触发，自动完成竞品调研 → 需求拆解 → PRD 撰写全流程</p>
+    <div class="eyebrow" style="color:var(--c)">用这个思路做了什么</div>
+    <h2 class="sec-title">PM 需求自动化</h2>
+    <p class="sec-sub">Notion 需求表新建一行，系统自动完成竞品调研 → 需求拆解 → PRD，结果回写到 Notion 子页面。这是用上面三个想法实际跑通的第一个 workflow。</p>
 
     <div class="pipeline">
       <div class="pnode"><div class="ni">📋</div><div class="nn">Notion</div><div class="ns">状态→待处理</div></div>
@@ -537,36 +360,26 @@
       <div class="pnode"><div class="ni">✅</div><div class="nn">Notion</div><div class="ns">回写链接</div></div>
     </div>
 
-    <!-- 三个原则的对应 -->
-    <div class="evidence-grid">
+    <div class="ev-grid">
       <div class="ev-card">
-        <h4>本地化 的体现</h4>
-        <p>n8n / Langfuse / Qdrant 全 Docker 自建；.env 在本机，Notion API Key 不经过任何第三方平台；调研报告、PRD 全部落到本地 outputs/ 目录。</p>
-        <div style="margin-top:10px">
-          <span class="principle-tag ptag-a">⬡ 本地化</span>
-        </div>
+        <h4>跑通之后发现的一件事</h4>
+        <p>开放型需求（比如「我们要不要做 X」）被硬套进 PRD 模板会很奇怪——PRD 假设你已经决定做了，但这类需求根本还没到那一步。所以加了 Discover 路径，只输出洞察备忘录，不强行生成 PRD。</p>
+        <span class="ptag ptag-c">Discover 路径</span>
       </div>
       <div class="ev-card">
-        <h4>资产化 的体现</h4>
-        <p>5 个 Skill（research / breakdown / prd_writer / prd_critic / insight_memo）以 .md 文件存在 skill-library/，启动时同步到 Notion Skill Library；历史 PRD 产出积累成 Eval 数据集原料。</p>
-        <div style="margin-top:10px">
-          <span class="principle-tag ptag-b">◈ 资产化</span>
-        </div>
+        <h4>Critic 为什么用不同家的模型</h4>
+        <p>PRD 生成用 Kimi，审校用 GLM（不同厂商）。同一个模型既写又改，容易对自己的表达方式有盲点，改的时候放水。跨家之后，GLM 确实能发现一些 Kimi 没注意到的结构问题。</p>
+        <span class="ptag ptag-b">跨家审校</span>
       </div>
       <div class="ev-card">
-        <h4>可迁移 的体现</h4>
-        <p>FastAPI 能力层独立于 n8n，可用 cron / Slack / GitHub Actions 替换编排；LLM_MODEL_* 环境变量随时换模型；pm-workflow CLI 在 n8n 宕机时也能手动触发全流程。</p>
-        <div style="margin-top:10px">
-          <span class="principle-tag ptag-c">⟳ 可迁移</span>
-        </div>
+        <h4>Skill Library 是最早积累下来的东西</h4>
+        <p>五个核心 Prompt（research / breakdown / prd_writer / prd_critic / insight_memo）都以 .md 文件存在仓库里，启动时自动同步到 Notion。哪天想换 workflow，这些 Prompt 直接复用。</p>
+        <span class="ptag ptag-a">资产化</span>
       </div>
       <div class="ev-card">
-        <h4>关键设计决策：跨家 Critic</h4>
-        <p>PRD 生成用 Kimi-K2（Moonshot），审校用 GLM-5（智谱）。同模型既当作者又当评审容易漏掉明显矛盾——跨家可以暴露不同模型的「盲点差」。这也是资产化的一部分：审校逻辑可复用到其他文档生成 workflow。</p>
-        <div style="margin-top:10px">
-          <span class="principle-tag ptag-b">◈ 资产化</span>
-          <span class="principle-tag ptag-c">⟳ 可迁移</span>
-        </div>
+        <h4>n8n 只做"穿针引线"</h4>
+        <p>n8n workflow 里只有 5 个 HTTP 节点，所有判断逻辑都在 FastAPI 服务里。好处是 n8n 如果哪天不想用了，换成 cron 或者其他触发方式，一行业务代码都不用动。</p>
+        <span class="ptag ptag-c">可迁移</span>
       </div>
     </div>
   </div>
@@ -575,9 +388,9 @@
 <!-- Token 数据 -->
 <section id="tokens">
   <div class="inner">
-    <div class="eyebrow" style="color:var(--a)">实测数据</div>
-    <h2 class="sec-title">Token 消耗拆解</h2>
-    <p class="sec-sub">4 条真实需求的端到端运行数据。Discover 路径节省说明「不为探索型需求强行跑 PRD」是正确决策</p>
+    <div class="eyebrow" style="color:var(--a)">跑了几条之后的数据</div>
+    <h2 class="sec-title">Token 消耗长什么样</h2>
+    <p class="sec-sub">4 条真实需求的端到端数据，按阶段拆开看。Discover 路径的那根柱子比较有意思。</p>
 
     <div class="token-layout">
       <div class="chart-box">
@@ -591,17 +404,17 @@
         </div>
         <div class="ts-card">
           <div class="ts-val" style="color:var(--c)">~4k</div>
-          <div class="ts-label">Discover 路径全程（research + insight）</div>
+          <div class="ts-label">Discover 路径全程（同一个需求，不跑 PRD）</div>
           <span class="badge bg-g">节省 80%+</span>
         </div>
         <div class="ts-card">
-          <div class="ts-val" style="color:#D97706">≤2 轮</div>
-          <div class="ts-label">Critic 修订上限，平均 1 轮通过</div>
-          <span class="badge bg-y">平均分 90/100</span>
+          <div class="ts-val" style="color:#D97706">90/100</div>
+          <div class="ts-label">平均 Critic 得分，≤2 轮修订</div>
+          <span class="badge bg-y">平均 1 轮通过</span>
         </div>
-        <div class="ts-card" style="background:#EEF2FF; border-color:#C7D2FE">
-          <div style="font-size:13px; color:#4338CA; line-height:1.7">
-            ⚠️ 注意：所有模型均为 <strong>reasoning 型号</strong>，会额外消耗 reasoning_tokens。建议把单需求预算设为 <strong>$3</strong> 留余量
+        <div class="ts-card" style="background:#F8F9FF; border-color:#C7D2FE;">
+          <div style="font-size:13px; color:#4338CA; line-height:1.75;">
+            ⚠️ 所有模型都是 reasoning 型号，会有额外的 reasoning_tokens 消耗，实际比字面 token 数贵一些。
           </div>
         </div>
       </div>
@@ -609,50 +422,50 @@
   </div>
 </section>
 
-<!-- 复用这套思路 -->
-<section id="reuse">
+<!-- 其他能用的地方 -->
+<section id="more">
   <div class="inner">
-    <div class="eyebrow" style="color:var(--b)">延伸思考</div>
-    <h2 class="sec-title">这套思路可以用在哪里</h2>
-    <p class="sec-sub">PM 需求自动化只是第一个案例。同样的三个原则可以套在任何高频、结构化的工作上</p>
+    <div class="eyebrow" style="color:var(--b)">还能用在哪</div>
+    <h2 class="sec-title">其实这套东西不只适合 PM</h2>
+    <p class="sec-sub">只要是高频、结构相对固定的工作，大概都能套。下面几个只是随手想的。</p>
 
-    <div style="display:grid; grid-template-columns: repeat(3,1fr); gap:16px;">
-      <div style="background:var(--white);border:1px solid var(--line);border-radius:12px;padding:22px;box-shadow:var(--shadow)">
-        <div style="font-size:22px;margin-bottom:10px">📬</div>
-        <div style="font-size:14px;font-weight:600;margin-bottom:6px">周报 / 月报自动化</div>
-        <div style="font-size:13px;color:var(--sub)">从多个数据源聚合，LLM 撰写，定时推送。Prompt 资产化 → 下次改风格只改一个文件</div>
+    <div class="ideas-grid">
+      <div class="idea-card">
+        <div class="icon">📬</div>
+        <h4>周报 / 月报</h4>
+        <p>从多个数据源聚合 → LLM 写初稿 → 定时推送。Prompt 版本化之后，改风格只改一个文件。</p>
       </div>
-      <div style="background:var(--white);border:1px solid var(--line);border-radius:12px;padding:22px;box-shadow:var(--shadow)">
-        <div style="font-size:22px;margin-bottom:10px">🧑‍💻</div>
-        <div style="font-size:14px;font-weight:600;margin-bottom:6px">代码 Review 助手</div>
-        <div style="font-size:13px;color:var(--sub)">PR 触发 → LLM 审查 + 分级打标 → 评论写回 GitHub。跨家 Critic 同样适用</div>
+      <div class="idea-card">
+        <div class="icon">🧑‍💻</div>
+        <h4>代码 Review 辅助</h4>
+        <p>PR 触发 → LLM 审查打标 → 评论写回 GitHub。跨家 Critic 同样适用，不同模型发现不同类型的问题。</p>
       </div>
-      <div style="background:var(--white);border:1px solid var(--line);border-radius:12px;padding:22px;box-shadow:var(--shadow)">
-        <div style="font-size:22px;margin-bottom:10px">📰</div>
-        <div style="font-size:14px;font-weight:600;margin-bottom:6px">行业情报聚合</div>
-        <div style="font-size:13px;color:var(--sub)">定时抓取 RSS + 网页 → 摘要 → Notion 落库。每篇摘要都是资产，积累后可做趋势分析</div>
+      <div class="idea-card">
+        <div class="icon">📰</div>
+        <h4>行业情报聚合</h4>
+        <p>定时抓 RSS + 网页 → 摘要 → 落库。每篇摘要都是资产，时间长了可以回头找趋势。</p>
       </div>
-      <div style="background:var(--white);border:1px solid var(--line);border-radius:12px;padding:22px;box-shadow:var(--shadow)">
-        <div style="font-size:22px;margin-bottom:10px">🎯</div>
-        <div style="font-size:14px;font-weight:600;margin-bottom:6px">面试题 / 培训素材生成</div>
-        <div style="font-size:13px;color:var(--sub)">输入知识点 → 自动出题 + 答案 + 难度分级。Skill Library 里存通用出题 Prompt</div>
+      <div class="idea-card">
+        <div class="icon">🗂️</div>
+        <h4>会议纪要结构化</h4>
+        <p>录音转文字 → 提取决策 / Action Item → 推 Notion。产出可回溯，慢慢变成团队知识库。</p>
       </div>
-      <div style="background:var(--white);border:1px solid var(--line);border-radius:12px;padding:22px;box-shadow:var(--shadow)">
-        <div style="font-size:22px;margin-bottom:10px">🗂️</div>
-        <div style="font-size:14px;font-weight:600;margin-bottom:6px">会议纪要结构化</div>
-        <div style="font-size:13px;color:var(--sub)">录音转文字 → 提取决策 / Action Items → 推送到 Notion。产出可回溯，积累成知识库</div>
+      <div class="idea-card">
+        <div class="icon">🎯</div>
+        <h4>培训素材生成</h4>
+        <p>输入知识点 → 自动出题 + 答案 + 难度分级。出题 Prompt 沉淀到 Skill Library，下次复用。</p>
       </div>
-      <div style="background:var(--white);border:1px solid var(--line);border-radius:12px;padding:22px;box-shadow:var(--shadow)">
-        <div style="font-size:22px;margin-bottom:10px">⚡</div>
-        <div style="font-size:14px;font-weight:600;margin-bottom:6px">你的下一个 Workflow</div>
-        <div style="font-size:13px;color:var(--sub)">识别一个高频重复任务 → 套用这套框架 → 本地化 + 资产化 + 可迁移</div>
+      <div class="idea-card">
+        <div class="icon">⚡</div>
+        <h4>你手头那个重复工作</h4>
+        <p>把那件每次做都觉得「又要来了」的事画成流程图，可能就是下一个 workflow 的起点。</p>
       </div>
     </div>
   </div>
 </section>
 
 <footer>
-  <p>PM 需求自动化 · 案例仓库 <a href="https://github.com/HystelleHe/pm-requirement-automation" target="_blank">github.com/HystelleHe/pm-requirement-automation</a></p>
+  <p>案例仓库 → <a href="https://github.com/HystelleHe/pm-requirement-automation" target="_blank">github.com/HystelleHe/pm-requirement-automation</a></p>
 </footer>
 
 <script>
@@ -662,10 +475,10 @@
     data: {
       labels: ['需求 A\n(Build)', '需求 B\n(Build)', '需求 C\n(Build)', '需求 C\n(Discover)'],
       datasets: [
-        { label: 'Research',     data: [3715, 6236, 3505, 2800], backgroundColor: '#818CF8', borderRadius: 3 },
-        { label: 'Breakdown',    data: [4594, 5098, 5235, 0],    backgroundColor: '#A78BFA', borderRadius: 3 },
-        { label: 'PRD + Critic', data: [49003, 50546, 22363, 0], backgroundColor: '#6366F1', borderRadius: 3 },
-        { label: 'Insight Memo', data: [0, 0, 0, 1370],          backgroundColor: '#34D399', borderRadius: 3 },
+        { label: 'Research',     data: [3715,  6236,  3505,  2800], backgroundColor: '#818CF8', borderRadius: 3 },
+        { label: 'Breakdown',    data: [4594,  5098,  5235,  0],    backgroundColor: '#A78BFA', borderRadius: 3 },
+        { label: 'PRD + Critic', data: [49003, 50546, 22363, 0],    backgroundColor: '#6366F1', borderRadius: 3 },
+        { label: 'Insight Memo', data: [0,     0,     0,     1370], backgroundColor: '#34D399', borderRadius: 3 },
       ]
     },
     options: {
