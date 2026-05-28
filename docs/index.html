@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PM 需求自动化系统</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:     #111827;
+      --sub:     #6B7280;
+      --line:    #E5E7EB;
+      --bg:      #F9FAFB;
+      --white:   #FFFFFF;
+      --accent:  #6366F1;
+      --accent2: #818CF8;
+      --green:   #10B981;
+      --amber:   #F59E0B;
+      --card-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      color: var(--ink);
+      background: var(--white);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: #0B1120;
+      color: #fff;
+      padding: 96px 24px 80px;
+      text-align: center;
+    }
+    .hero-tag {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 20px;
+    }
+    .hero h1 {
+      font-size: clamp(28px, 5vw, 52px);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+    .hero p {
+      font-size: clamp(15px, 2vw, 18px);
+      color: #9CA3AF;
+      max-width: 560px;
+      margin: 0 auto 40px;
+      font-weight: 300;
+    }
+    .hero-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 8px;
+      color: rgba(255,255,255,.75);
+      font-size: 13px;
+      text-decoration: none;
+      transition: border-color .2s, color .2s;
+    }
+    .hero-cta:hover { border-color: rgba(255,255,255,.4); color: #fff; }
+
+    /* ── Stats bar ── */
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      background: var(--white);
+      border-bottom: 1px solid var(--line);
+    }
+    .stat-item {
+      flex: 1;
+      max-width: 200px;
+      text-align: center;
+      padding: 28px 16px;
+      border-right: 1px solid var(--line);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-num {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -.02em;
+    }
+    .stat-num span { color: var(--accent); }
+    .stat-label { font-size: 12px; color: var(--sub); margin-top: 4px; }
+
+    /* ── Section common ── */
+    section { padding: 80px 24px; }
+    section:nth-child(even) { background: var(--bg); }
+    .section-inner { max-width: 900px; margin: 0 auto; }
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: clamp(22px, 3vw, 32px);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      margin-bottom: 12px;
+    }
+    .section-sub {
+      font-size: 15px;
+      color: var(--sub);
+      max-width: 520px;
+      margin-bottom: 48px;
+    }
+
+    /* ── Pipeline ── */
+    .pipeline {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      overflow-x: auto;
+      padding: 8px 0 16px;
+    }
+    .pipe-node {
+      flex-shrink: 0;
+      background: var(--white);
+      border: 1.5px solid var(--line);
+      border-radius: 10px;
+      padding: 14px 18px;
+      text-align: center;
+      min-width: 110px;
+      box-shadow: var(--card-shadow);
+    }
+    .pipe-node .node-icon { font-size: 20px; margin-bottom: 6px; }
+    .pipe-node .node-name { font-size: 12px; font-weight: 600; color: var(--ink); }
+    .pipe-node .node-sub { font-size: 11px; color: var(--sub); margin-top: 2px; }
+    .pipe-node.accent-node {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, #EEF2FF, #F5F3FF);
+    }
+    .pipe-arrow {
+      flex-shrink: 0;
+      width: 32px;
+      text-align: center;
+      color: var(--sub);
+      font-size: 18px;
+    }
+
+    /* branch indicator */
+    .pipe-branch {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .branch-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+    .branch-tag {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+    .branch-build { background: #EEF2FF; color: var(--accent); }
+    .branch-discover { background: #ECFDF5; color: var(--green); }
+
+    /* ── Dual path cards ── */
+    .path-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 640px) { .path-grid { grid-template-columns: 1fr; } }
+    .path-card {
+      background: var(--white);
+      border: 1.5px solid var(--line);
+      border-radius: 14px;
+      padding: 28px;
+      box-shadow: var(--card-shadow);
+    }
+    .path-card.build { border-top: 3px solid var(--accent); }
+    .path-card.discover { border-top: 3px solid var(--green); }
+    .path-type {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .build .path-type { color: var(--accent); }
+    .discover .path-type { color: var(--green); }
+    .path-card h3 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+    .path-card p { font-size: 14px; color: var(--sub); margin-bottom: 18px; }
+    .path-steps { list-style: none; }
+    .path-steps li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .path-steps li:last-child { border-bottom: none; }
+    .step-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .build .step-dot { background: var(--accent); }
+    .discover .step-dot { background: var(--green); }
+    .step-token {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--sub);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Design highlights ── */
+    .highlights-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    @media (max-width: 720px) { .highlights-grid { grid-template-columns: 1fr; } }
+    .highlight-card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: var(--card-shadow);
+    }
+    .highlight-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: #EEF2FF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      margin-bottom: 14px;
+    }
+    .highlight-card h4 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+    .highlight-card p { font-size: 13px; color: var(--sub); line-height: 1.6; }
+
+    /* ── Token section ── */
+    .token-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 32px;
+      align-items: start;
+    }
+    @media (max-width: 768px) { .token-layout { grid-template-columns: 1fr; } }
+    .chart-wrap {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: var(--card-shadow);
+    }
+    .chart-wrap canvas { width: 100% !important; }
+    .token-insights { display: flex; flex-direction: column; gap: 16px; }
+    .insight-card {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: var(--card-shadow);
+    }
+    .insight-card .insight-val {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -.02em;
+      margin-bottom: 4px;
+    }
+    .insight-card .insight-label { font-size: 12px; color: var(--sub); }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-top: 6px;
+    }
+    .badge-green { background: #ECFDF5; color: var(--green); }
+    .badge-indigo { background: #EEF2FF; color: var(--accent); }
+
+    /* ── Stack ── */
+    .stack-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+    @media (max-width: 640px) { .stack-grid { grid-template-columns: repeat(2, 1fr); } }
+    .stack-item {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+      box-shadow: var(--card-shadow);
+    }
+    .stack-item .stack-icon { font-size: 22px; margin-bottom: 8px; }
+    .stack-item .stack-name { font-size: 13px; font-weight: 600; }
+    .stack-item .stack-role { font-size: 11px; color: var(--sub); margin-top: 2px; }
+
+    /* ── Next ── */
+    .next-items { display: flex; flex-direction: column; gap: 12px; max-width: 600px; }
+    .next-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px 18px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      box-shadow: var(--card-shadow);
+    }
+    .next-num {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #EEF2FF;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .next-item h4 { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+    .next-item p { font-size: 13px; color: var(--sub); }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      font-size: 12px;
+      color: var(--sub);
+      border-top: 1px solid var(--line);
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<!-- ── Hero ── -->
+<header class="hero">
+  <div class="hero-tag">Internal · PM Automation</div>
+  <h1>PM 需求自动化系统</h1>
+  <p>Notion 一行触发，自动完成竞品调研、需求拆解、PRD 撰写全流程，LLM 跨家 Critic 审校</p>
+  <a class="hero-cta" href="https://github.com/HystelleHe/pm-requirement-automation" target="_blank">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.39.6.11.82-.26.82-.58v-2.03c-3.34.72-4.04-1.61-4.04-1.61-.54-1.38-1.33-1.75-1.33-1.75-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.48 1 .11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02 0 2.04.14 3 .4 2.28-1.55 3.29-1.23 3.29-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58C20.56 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+    查看源码
+  </a>
+</header>
+
+<!-- ── Stats bar ── -->
+<div class="stats">
+  <div class="stat-item">
+    <div class="stat-num">4<span>+</span></div>
+    <div class="stat-label">已处理真实需求</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">~<span>155</span>k</div>
+    <div class="stat-label">总消耗 tokens</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num"><span>90</span>/100</div>
+    <div class="stat-label">PRD 平均 Critic 得分</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num"><span>80</span>%<span>+</span></div>
+    <div class="stat-label">Discover 路径节省 token</div>
+  </div>
+</div>
+
+<!-- ── Pipeline ── -->
+<section id="pipeline">
+  <div class="section-inner">
+    <div class="section-label">核心流程</div>
+    <h2 class="section-title">从 Notion 到产出，全自动</h2>
+    <p class="section-sub">n8n 每 2 分钟轮询一次「待处理」状态，触发后三阶段串行执行，结果以 Notion 子页面回写</p>
+
+    <div class="pipeline">
+      <div class="pipe-node">
+        <div class="node-icon">📋</div>
+        <div class="node-name">Notion</div>
+        <div class="node-sub">需求表新增行<br>状态→待处理</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-node">
+        <div class="node-icon">⚙️</div>
+        <div class="node-name">n8n</div>
+        <div class="node-sub">定时轮询<br>HTTP 编排</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-node accent-node">
+        <div class="node-icon">🔍</div>
+        <div class="node-name">Research</div>
+        <div class="node-sub">竞品发现<br>+ 网页摘要</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-branch">
+        <div class="branch-row">
+          <span class="branch-tag branch-build">Build</span>
+          <div class="pipe-node accent-node">
+            <div class="node-icon">🧩</div>
+            <div class="node-name">Breakdown</div>
+            <div class="node-sub">用户故事<br>功能拆解</div>
+          </div>
+          <div class="pipe-arrow">→</div>
+          <div class="pipe-node accent-node">
+            <div class="node-icon">📄</div>
+            <div class="node-name">PRD + Critic</div>
+            <div class="node-sub">Kimi 生成<br>GLM 审校</div>
+          </div>
+        </div>
+        <div class="branch-row">
+          <span class="branch-tag branch-discover">Discover</span>
+          <div class="pipe-node" style="border-color:#10B981; background:linear-gradient(135deg,#ECFDF5,#F0FDF4)">
+            <div class="node-icon">💡</div>
+            <div class="node-name">Insight Memo</div>
+            <div class="node-sub">洞察/趋势<br>机会/风险</div>
+          </div>
+        </div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-node">
+        <div class="node-icon">✅</div>
+        <div class="node-name">Notion</div>
+        <div class="node-sub">回写链接<br>状态→已完成</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Dual paths ── -->
+<section id="paths">
+  <div class="section-inner">
+    <div class="section-label">两条路径</div>
+    <h2 class="section-title">按需求类型自动路由</h2>
+    <p class="section-sub">在 Notion 需求行里选「需求类型」，系统自动走对应路径，不同深度对应不同 token 开销</p>
+
+    <div class="path-grid">
+      <div class="path-card build">
+        <div class="path-type">Build · 功能需求</div>
+        <h3>做什么 → 怎么做</h3>
+        <p>适合已决定要做某个功能，需要完整竞品参考 + PRD 落地的场景</p>
+        <ul class="path-steps">
+          <li><span class="step-dot"></span>竞品关键词发现<span class="step-token">~3–6k tokens</span></li>
+          <li><span class="step-dot"></span>Tavily 网页搜索 + 摘要<span class="step-token">（搜索 API）</span></li>
+          <li><span class="step-dot"></span>Research 报告整合<span class="step-token">含推理 tokens</span></li>
+          <li><span class="step-dot"></span>需求拆解（用户故事）<span class="step-token">~4–5k tokens</span></li>
+          <li><span class="step-dot"></span>PRD 初版生成（Kimi）<span class="step-token">~22–50k tokens</span></li>
+          <li><span class="step-dot"></span>Critic 审校（GLM）<span class="step-token">≤2 轮</span></li>
+        </ul>
+      </div>
+      <div class="path-card discover">
+        <div class="path-type">Discover · 探索调研</div>
+        <h3>该做什么 → 洞察</h3>
+        <p>适合方向模糊、需要先探索市场 / 趋势 / 机会的场景，不强行输出 PRD</p>
+        <ul class="path-steps">
+          <li><span class="step-dot"></span>竞品关键词发现<span class="step-token">~2–4k tokens</span></li>
+          <li><span class="step-dot"></span>Tavily 网页搜索 + 摘要<span class="step-token">（搜索 API）</span></li>
+          <li><span class="step-dot"></span>洞察备忘录生成<span class="step-token">~1–2k tokens</span></li>
+          <li><span class="step-dot"></span><em>—— Breakdown / PRD 跳过 ——</em><span class="step-token">节省 80%+</span></li>
+        </ul>
+        <div style="margin-top:16px; padding:12px 14px; background:#ECFDF5; border-radius:8px; font-size:13px; color:#065F46">
+          💡 产出包含：核心洞察 / 市场趋势 / 机会点 / 风险 / 开放问题<br>适合在 PRD 前做方向验证
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Design highlights ── -->
+<section id="design">
+  <div class="section-inner">
+    <div class="section-label">设计思路</div>
+    <h2 class="section-title">三个核心决策</h2>
+    <p class="section-sub">每个决策背后有明确的 tradeoff 考量</p>
+
+    <div class="highlights-grid">
+      <div class="highlight-card">
+        <div class="highlight-icon">🔀</div>
+        <h4>跨家 Critic，避免自我审校盲点</h4>
+        <p>PRD 生成用 <strong>Kimi-K2</strong>，审校用 <strong>GLM-5</strong>（智谱）。同一模型既当作者又当评审容易互相迁就、漏掉明显矛盾。实测跨家 Critic 能发现结构歧义和目标冲突。</p>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-icon">🪶</div>
+        <h4>n8n 只做薄编排，能力层独立</h4>
+        <p>n8n workflow 只有 5 个 HTTP 节点，所有业务逻辑全在 FastAPI 服务里。这意味着可以随时换掉 n8n，用 cron / GitHub Actions / Slack 触发，不影响产出质量。</p>
+      </div>
+      <div class="highlight-card">
+        <div class="highlight-icon">🛑</div>
+        <h4>Discover 路径：不为探索型需求强行写 PRD</h4>
+        <p>早期验证发现「开放型需求被 PRD 模板硬塞 user story 会产生违和感」。Discover 路径不接 Breakdown/PRD，输出洞察备忘录更匹配方向模糊阶段的真实诉求。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Token data ── -->
+<section id="tokens">
+  <div class="section-inner">
+    <div class="section-label">实测数据</div>
+    <h2 class="section-title">Token 消耗拆解</h2>
+    <p class="section-sub">基于 4 条真实需求的端到端运行数据，按阶段拆分 token 分布</p>
+
+    <div class="token-layout">
+      <div class="chart-wrap">
+        <canvas id="tokenChart" height="280"></canvas>
+      </div>
+      <div class="token-insights">
+        <div class="insight-card">
+          <div class="insight-val" style="color:var(--accent)">~50k</div>
+          <div class="insight-label">Build 路径 PRD 阶段平均 token<br>（含 Critic 修订）</div>
+          <span class="badge badge-indigo">含 reasoning_tokens</span>
+        </div>
+        <div class="insight-card">
+          <div class="insight-val" style="color:var(--green)">~4k</div>
+          <div class="insight-label">Discover 路径全程 token<br>（research + insight_memo）</div>
+          <span class="badge badge-green">节省 80%+</span>
+        </div>
+        <div class="insight-card">
+          <div class="insight-val" style="color:var(--amber)">≤2 轮</div>
+          <div class="insight-label">PRD Critic 修订循环上限<br>平均 1 轮即通过</div>
+        </div>
+        <div class="insight-card" style="background:#EEF2FF; border-color:var(--accent2)">
+          <div style="font-size:13px; color:#4338CA; line-height:1.7">
+            ⚠️ 所有可用模型均为 <strong>reasoning 型号</strong>，响应中含 <code style="background:#E0E7FF;padding:1px 4px;border-radius:3px;font-size:11px">reasoning_content</code>，会额外消耗 reasoning tokens，建议把预算设为 $3/需求
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Tech stack ── -->
+<section id="stack">
+  <div class="section-inner">
+    <div class="section-label">技术栈</div>
+    <h2 class="section-title">一份 docker-compose 迁移全部</h2>
+    <p class="section-sub">5 个容器，一条命令启动，.env 换掉就能迁到新机器</p>
+
+    <div class="stack-grid">
+      <div class="stack-item">
+        <div class="stack-icon">🔗</div>
+        <div class="stack-name">n8n</div>
+        <div class="stack-role">编排 / 定时触发</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-icon">⚡</div>
+        <div class="stack-name">FastAPI</div>
+        <div class="stack-role">能力层 / CLI 兜底</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-icon">🤖</div>
+        <div class="stack-name">Kimi-K2 / GLM-5</div>
+        <div class="stack-role">生成 / 审校（跨家）</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-icon">🔎</div>
+        <div class="stack-name">Tavily</div>
+        <div class="stack-role">实时网页搜索</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-icon">📄</div>
+        <div class="stack-name">Notion</div>
+        <div class="stack-role">触发源 / 产出目标</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-icon">📊</div>
+        <div class="stack-name">Langfuse</div>
+        <div class="stack-role">LLM 调用观测 / 成本</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-icon">🗃️</div>
+        <div class="stack-name">Qdrant</div>
+        <div class="stack-role">向量库（Phase 7 启用）</div>
+      </div>
+      <div class="stack-item">
+        <div class="stack-icon">🐳</div>
+        <div class="stack-name">Docker Compose</div>
+        <div class="stack-role">可迁移部署单元</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Next steps ── -->
+<section id="next">
+  <div class="section-inner">
+    <div class="section-label">下一步</div>
+    <h2 class="section-title">当前是 MVP，已可日常使用</h2>
+    <p class="section-sub">Phase 7 Eval 在攒够 10 条真实需求数据后启动</p>
+
+    <div class="next-items">
+      <div class="next-item">
+        <div class="next-num">1</div>
+        <div>
+          <h4>Phase 7 · 自动评估系统</h4>
+          <p>用 GLM 作 Judge，构建 Eval 数据集，量化 Prompt 迭代效果，防回归</p>
+        </div>
+      </div>
+      <div class="next-item">
+        <div class="next-num">2</div>
+        <div>
+          <h4>Critic 增加「事实密度」维度</h4>
+          <p>当前 Critic 偏向内部一致性检查；0 竞品场景得分虚高，需补充对竞品事实覆盖度的评估</p>
+        </div>
+      </div>
+      <div class="next-item">
+        <div class="next-num">3</div>
+        <div>
+          <h4>向量库 Few-shot（Phase 5 暂缓）</h4>
+          <p>Qdrant 已就绪，等数据量 &gt; 10 条后启用，让 PRD 生成参考历史优质案例</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>PM 需求自动化系统 · 内部项目 · <a href="https://github.com/HystelleHe/pm-requirement-automation" target="_blank">github.com/HystelleHe/pm-requirement-automation</a></p>
+</footer>
+
+<script>
+  // token chart data: research / breakdown / prd per requirement
+  const labels = ['需求 A\n(Build)', '需求 B\n(Build)', '需求 C\n(Build)', '需求 C\n(Discover)'];
+  const research  = [3715, 6236, 3505, 2800];
+  const breakdown = [4594, 5098, 5235, 0];
+  const prd       = [49003, 50546, 22363, 0];
+  const insight   = [0, 0, 0, 1370];
+
+  const ctx = document.getElementById('tokenChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Research',     data: research,  backgroundColor: '#818CF8', borderRadius: 3 },
+        { label: 'Breakdown',    data: breakdown, backgroundColor: '#A78BFA', borderRadius: 3 },
+        { label: 'PRD + Critic', data: prd,       backgroundColor: '#6366F1', borderRadius: 3 },
+        { label: 'Insight Memo', data: insight,   backgroundColor: '#34D399', borderRadius: 3 },
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 12 }, boxWidth: 12, padding: 16 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()} tokens`
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          grid: { display: false },
+          ticks: { font: { size: 11 } }
+        },
+        y: {
+          stacked: true,
+          grid: { color: '#F3F4F6' },
+          ticks: {
+            font: { size: 11 },
+            callback: v => v >= 1000 ? (v/1000).toFixed(0)+'k' : v
+          }
+        }
+      }
+    }
+  });
+</script>
+</body>
+</html>
